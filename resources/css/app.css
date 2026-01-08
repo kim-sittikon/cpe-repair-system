@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=K2D:wght@200;300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .animate-marquee {
+        animation: marquee 25s linear infinite;
+    }
+
+    .pause-on-hover:hover .animate-marquee {
+        animation-play-state: paused;
+    }
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
