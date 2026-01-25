@@ -11,6 +11,57 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Health Check Endpoint for Monitoring (UptimeRobot, etc.)
+Route::get('/health', function () {
+    $status = [
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String(),
+        'checks' => []
+    ];
+    
+    // Check Database
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $status['checks']['database'] = 'ok';
+    } catch (\Exception $e) {
+        $status['checks']['database'] = 'error';
+        $status['status'] = 'degraded';
+    }
+    
+    // Check Redis
+    try {
+        \Illuminate\Support\Facades\Redis::ping();
+        $status['checks']['redis'] = 'ok';
+    } catch (\Exception $e) {
+        $status['checks']['redis'] = 'error';
+        $status['status'] = 'degraded';
+    }
+    
+    // Check Disk Space (warning if < 1GB free)
+    $freeSpace = disk_free_space('/');
+    $status['checks']['disk_free_gb'] = round($freeSpace / 1024 / 1024 / 1024, 2);
+    if ($freeSpace < 1024 * 1024 * 1024) {
+        $status['checks']['disk'] = 'warning';
+        $status['status'] = 'degraded';
+    } else {
+        $status['checks']['disk'] = 'ok';
+    }
+    
+    return response()->json($status, $status['status'] === 'ok' ? 200 : 503);
+});
+
+Route::get('/test-mail', function () {
+    try {
+        \Illuminate\Support\Facades\Mail::raw('This is a test email from Laravel.', function ($message) {
+            $message->to('test@example.com') // Replace with a real email if you can, or better yet, make it dynamic or just check logs if strictly local without outgoing
+                    ->subject('Test Email');
+        });
+        return 'Email sent successfully! Check your inbox.';
+    } catch (\Exception $e) {
+        return 'Failed to send email: ' . $e->getMessage();
+    }
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
