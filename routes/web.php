@@ -137,6 +137,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users/{id}/suspend', [AdminUserController::class, 'suspend'])->name('users.suspend');
         Route::post('/users/{id}/suspend', [AdminUserController::class, 'storeSuspension'])->name('users.suspend.store');
         Route::post('/users/{id}/unsuspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
+        
+        // Edit User
+        Route::get('/users/{id}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+        Route::patch('/users/{id}', [AdminUserController::class, 'update'])->name('users.update');
 
     });
 

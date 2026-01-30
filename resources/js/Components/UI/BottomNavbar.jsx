@@ -9,6 +9,10 @@ export default function BottomNavbar() {
     // Get current path for active state
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
+    // Pages that should NOT trigger mode change (common pages accessible from all modes)
+    const commonPages = ['/announcements', '/profile', '/dashboard'];
+    const isCommonPage = commonPages.some(page => currentPath.startsWith(page));
+
     // Auto-detect mode from current URL
     const detectModeFromPath = () => {
         if (currentPath.startsWith('/repairs')) return 'repair';
@@ -17,11 +21,23 @@ export default function BottomNavbar() {
         return 'general';
     };
 
-    const [currentMode, setCurrentMode] = useState(detectModeFromPath);
+    const [currentMode, setCurrentMode] = useState('general');
 
-    // Update mode when path changes
+    // Initialize mode from localStorage on client-side mount
     useEffect(() => {
-        setCurrentMode(detectModeFromPath());
+        const savedMode = localStorage.getItem('bottomNavMode');
+        if (isCommonPage && savedMode) {
+            // On common pages, use saved mode
+            setCurrentMode(savedMode);
+        } else if (!isCommonPage) {
+            // On specific mode pages, detect and save mode
+            const newMode = detectModeFromPath();
+            setCurrentMode(newMode);
+            localStorage.setItem('bottomNavMode', newMode);
+        } else if (savedMode) {
+            // Fallback: use saved mode if available
+            setCurrentMode(savedMode);
+        }
     }, [currentPath]);
 
     if (!user) return null;
@@ -60,6 +76,7 @@ export default function BottomNavbar() {
 
     const selectMode = (mode) => {
         setCurrentMode(mode);
+        localStorage.setItem('bottomNavMode', mode);
         closeSheet();
     };
 
@@ -429,7 +446,7 @@ export default function BottomNavbar() {
                                     <Link href="/repairs/jobs" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
                                         <span>📋 ใบงานรวม</span>
                                     </Link>
-                                    <Link href="/announcements" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
+                                    <Link href="/announcements/create" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
                                         <span>📢 สร้างข่าวสาร</span>
                                     </Link>
                                     <Link href="/repairs/keywords" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
@@ -438,25 +455,16 @@ export default function BottomNavbar() {
                                 </div>
                             </div>
                         )}
-                        {currentMode === 'complaint' && (
-                            <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-                                <p className="text-xs text-gray-500 mb-2 px-2">เมนูเพิ่มเติม - ร้องเรียน</p>
-                                <div className="space-y-1">
-                                    <Link href="/announcements" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors">
-                                        <span>📢 สร้างข่าวสาร</span>
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
+
                         {currentMode === 'admin' && (
                             <div className="px-4 pb-4 border-t border-gray-100 pt-3">
                                 <p className="text-xs text-gray-500 mb-2 px-2">เมนูเพิ่มเติม - ผู้ดูแล</p>
                                 <div className="space-y-1">
+                                    <Link href="/admin/users/invite" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-colors">
+                                        <span>👤 สร้างผู้ใช้งาน</span>
+                                    </Link>
                                     <Link href="/admin/keywords" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-colors">
                                         <span>🏷️ จัดการคีย์เวิร์ด</span>
-                                    </Link>
-                                    <Link href="/announcements" onClick={closeSheet} className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-colors">
-                                        <span>📢 สร้างข่าวสาร</span>
                                     </Link>
                                 </div>
                             </div>

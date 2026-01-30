@@ -38,18 +38,19 @@ export default function Create({ auth, buildings = [] }) {
     return (
         <AuthenticatedLayout user={auth.user}>
             {/* Custom Header Section */}
-            <div className="relative w-full h-[300px] overflow-hidden">
+            <div className="relative w-full h-[160px] sm:h-[300px] overflow-hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: "url('/images/landing-bg-final.png')" }}
                 ></div>
                 <div className="absolute inset-0 bg-black/50"></div>
                 <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
-                    <h1 className="text-3xl md:text-4xl font-medium text-white tracking-wide leading-tight drop-shadow-md">
+                    <h1 className="text-xl sm:text-3xl md:text-4xl font-medium text-white tracking-wide leading-tight drop-shadow-md">
                         แบบฟอร์มแจ้งปัญหา ภาควิศวกรรมคอมพิวเตอร์
                     </h1>
                 </div>
             </div>
+
 
             <div className="max-w-4xl mx-auto -mt-10 mb-12 relative px-4 sm:px-6 lg:px-8 z-20">
                 <div className="bg-white rounded-lg shadow-xl overflow-hidden border border-gray-100 p-8 md:p-10">
@@ -91,22 +92,21 @@ export default function Create({ auth, buildings = [] }) {
                         </div>
 
 
-                        {/* Location - Only show for Repair */}
                         {/* Location - Show for both but Required only for Repair */}
-                        <div className="space-y-4 transition-all duration-300 ease-in-out">
-                            <label className="text-xl font-medium text-gray-800">
-                                สถานที่ {data.type === 'repair' && <span className="text-red-500 text-base">* (จำเป็นต้องระบุ)</span>}
-                                {data.type === 'complaint' && <span className="text-gray-400 text-base font-normal ml-2">(ไม่บังคับ)</span>}
+                        <div className="space-y-3 transition-all duration-300 ease-in-out">
+                            <label className="text-lg sm:text-xl font-medium text-gray-800">
+                                สถานที่ {data.type === 'repair' && <span className="text-red-500 text-sm sm:text-base">* (จำเป็นต้องระบุ)</span>}
+                                {data.type === 'complaint' && <span className="text-gray-400 text-sm font-normal ml-2">(ไม่บังคับ)</span>}
                             </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-0 md:pl-0">
-                                <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2 sm:gap-6">
+                                <div className="space-y-1">
                                     <select
                                         value={data.location_id}
                                         onChange={e => {
                                             const newLocationId = e.target.value;
                                             setData(currentData => ({ ...currentData, location_id: newLocationId, room: '' }));
                                         }}
-                                        className={`w-full rounded-md border-gray-300 shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] py-2.5 text-gray-600 ${errors.location_id ? 'border-red-500' : ''}`}
+                                        className={`w-full rounded-lg sm:rounded-md border-gray-300 shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] py-2 sm:py-2.5 text-sm sm:text-base text-gray-600 ${errors.location_id ? 'border-red-500' : ''}`}
                                     >
                                         <option value="">เลือกอาคาร</option>
                                         {buildings.map(building => (
@@ -115,14 +115,13 @@ export default function Create({ auth, buildings = [] }) {
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.location_id && <div className="text-red-500 text-sm mt-1">{errors.location_id}</div>}
+                                    {errors.location_id && <div className="text-red-500 text-xs sm:text-sm">{errors.location_id}</div>}
                                 </div>
-                                <div className="space-y-2">
-
+                                <div className="space-y-1">
                                     <select
                                         value={data.room}
                                         onChange={e => setData('room', e.target.value)}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] py-2.5 text-gray-600"
+                                        className="w-full rounded-lg sm:rounded-md border-gray-300 shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] py-2 sm:py-2.5 text-sm sm:text-base text-gray-600"
                                     >
                                         <option value="">เลือกห้อง</option>
 
@@ -140,7 +139,7 @@ export default function Create({ auth, buildings = [] }) {
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.room && <div className="text-red-500 text-sm mt-1">{errors.room}</div>}
+                                    {errors.room && <div className="text-red-500 text-xs sm:text-sm">{errors.room}</div>}
                                 </div>
                             </div>
                         </div>
@@ -223,20 +222,38 @@ export default function Create({ auth, buildings = [] }) {
                         </div>
 
                         {/* Submit Buttons */}
-                        <div className="flex justify-center gap-4 pt-4">
+                        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-6">
                             <button
                                 type="button"
                                 onClick={() => window.history.back()}
-                                className="px-8 py-2.5 border border-[#F59E0B] text-[#F59E0B] rounded-full font-medium hover:bg-orange-50 transition-colors bg-white w-40"
+                                className="group flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md sm:w-40"
                             >
-                                ล้างค่าแบบฟอร์ม
+                                <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                ย้อนกลับ
                             </button>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="px-8 py-2.5 bg-[#F59E0B] text-white rounded-full font-medium hover:bg-[#D97706] transition-colors shadow-md w-40 disabled:opacity-50"
+                                className="group flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white rounded-xl font-medium hover:from-[#D97706] hover:to-[#B45309] transition-all duration-200 shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 disabled:opacity-50 disabled:cursor-not-allowed sm:w-40"
                             >
-                                {processing ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
+                                {processing ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        กำลังบันทึก...
+                                    </>
+                                ) : (
+                                    <>
+                                        บันทึกข้อมูล
+                                        <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </>
+                                )}
                             </button>
                         </div>
 

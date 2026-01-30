@@ -207,8 +207,9 @@ class AdminUserController extends Controller
     {
         $user = Account::findOrFail($id);
 
-        return Inertia::render('Admin/SuspendUser', [
+        return Inertia::render('Admin/ManageUser', [
             'user' => $user,
+            'activeTab' => 'suspend',
         ]);
     }
 
@@ -297,4 +298,51 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')
             ->with('success', 'ยกเลิกการระงับบัญชีเรียบร้อยแล้ว');
     }
+
+    /**
+     * แสดงหน้าแก้ไขข้อมูลผู้ใช้
+     */
+    public function edit($id)
+    {
+        $user = Account::findOrFail($id);
+
+        return Inertia::render('Admin/ManageUser', [
+            'user' => $user,
+            'activeTab' => 'edit',
+        ]);
+    }
+
+    /**
+     * บันทึกการแก้ไขข้อมูลผู้ใช้
+     */
+    public function update($id, Request $request)
+    {
+        $user = Account::findOrFail($id);
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'role' => 'required|in:student,teacher,staff',
+            'job_repair' => 'boolean',
+            'job_admin' => 'boolean',
+            'job_complaint' => 'boolean',
+        ], [
+            'first_name.required' => 'กรุณากรอกชื่อ',
+            'last_name.required' => 'กรุณากรอกนามสกุล',
+            'role.required' => 'กรุณาเลือกบทบาท',
+        ]);
+
+        $user->update([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'role' => $validated['role'],
+            'job_repair' => $validated['job_repair'] ?? false,
+            'job_admin' => $validated['job_admin'] ?? false,
+            'job_complaint' => $validated['job_complaint'] ?? false,
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'แก้ไขข้อมูลผู้ใช้เรียบร้อยแล้ว');
+    }
 }
+

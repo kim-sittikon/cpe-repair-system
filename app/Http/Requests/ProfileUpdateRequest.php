@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Account;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
@@ -18,14 +16,19 @@ class ProfileUpdateRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                Rule::unique(Account::class)->ignore($this->user()->account_id),
-            ],
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'first_name.required' => 'กรุณากรอกชื่อ',
+            'first_name.max' => 'ชื่อต้องไม่เกิน 255 ตัวอักษร',
+            'last_name.required' => 'กรุณากรอกนามสกุล',
+            'last_name.max' => 'นามสกุลต้องไม่เกิน 255 ตัวอักษร',
         ];
     }
 }

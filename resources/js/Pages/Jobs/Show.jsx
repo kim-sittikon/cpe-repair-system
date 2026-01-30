@@ -5,7 +5,9 @@ import { useState, useRef, useEffect } from 'react';
 export default function Show({ auth, job }) {
     const currentUserSteps = job.job_steps?.filter(step => step.assigned_account_id === auth.user.account_id) || [];
     const currentStep = currentUserSteps.find(step => step.status === 'pending' || step.status === 'in_progress');
-    const [selectedStep, setSelectedStep] = useState(currentStep || currentUserSteps[0] || null);
+    // Fallback: if user has no assigned steps, show the first step of the job
+    const allStepsSorted = job.job_steps?.sort((a, b) => a.step_number - b.step_number) || [];
+    const [selectedStep, setSelectedStep] = useState(currentStep || currentUserSteps[0] || allStepsSorted[0] || null);
     const fileInputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -99,7 +101,7 @@ export default function Show({ auth, job }) {
                                 </h1>
                             </div>
                             <Link
-                                href={route('repairs.jobs.my')}
+                                href={route(new URLSearchParams(window.location.search).get('from') === 'index' ? 'repairs.jobs.index' : 'repairs.jobs.my')}
                                 className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all flex-shrink-0"
                             >
                                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,11 +111,47 @@ export default function Show({ auth, job }) {
                         </div>
                     </div>
 
+                    {/* Mobile: Horizontal Step Selector */}
+                    <div className="lg:hidden mb-4">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">เลือกขั้นตอน</p>
+                            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                                {job.job_steps?.sort((a, b) => a.step_number - b.step_number).map((step) => {
+                                    const isActive = isMyStep(step) && (step.status === 'pending' || step.status === 'in_progress');
+                                    const isCurrent = isCurrentStep(step);
+                                    const isCompleted = step.status === 'completed' || step.status === 'done';
+
+                                    return (
+                                        <button
+                                            key={step.jobstep_id}
+                                            onClick={() => setSelectedStep(step)}
+                                            className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${isCurrent
+                                                ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md'
+                                                : isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                    : isCompleted
+                                                        ? 'bg-gray-100 text-gray-400'
+                                                        : 'bg-gray-50 text-gray-600 border border-gray-200'
+                                                }`}
+                                        >
+                                            {isCompleted && (
+                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                            {step.step_number}. {step.step_name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Main Content - Two Cards Layout */}
                     <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
 
-                        {/* Left Card - Step List */}
-                        <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:w-80 flex-shrink-0 opacity-100' : 'lg:w-0 opacity-0 lg:hidden'} overflow-hidden`}>
+                        {/* Left Card - Step List - Hidden on Mobile */}
+                        <div className={`hidden lg:block transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:w-80 flex-shrink-0 opacity-100' : 'lg:w-0 opacity-0 lg:hidden'} overflow-hidden`}>
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
                                 <div className="p-4 lg:p-5">
                                     <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -368,42 +406,42 @@ export default function Show({ auth, job }) {
 
                                     {/* View Only State - Other's Step */}
                                     {!isMyStep(selectedStep) && selectedStep.status !== 'completed' && selectedStep.status !== 'done' && (
-                                        <div className="p-8 text-center border-t border-gray-100">
-                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <div className="p-4 sm:p-8 text-center border-t border-gray-100">
+                                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </div>
-                                            <h4 className="text-base font-semibold text-gray-700 mb-1">ดูได้อย่างเดียว</h4>
-                                            <p className="text-sm text-gray-500">ขั้นตอนนี้ได้รับมอบหมายให้ผู้อื่นดำเนินการ</p>
+                                            <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-1">ดูได้อย่างเดียว</h4>
+                                            <p className="text-xs sm:text-sm text-gray-500">ขั้นตอนนี้ได้รับมอบหมายให้ผู้อื่นดำเนินการ</p>
                                         </div>
                                     )}
 
                                     {/* Completed State */}
                                     {(selectedStep.status === 'completed' || selectedStep.status === 'done') && (
-                                        <div className="p-10 text-center">
-                                            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-200">
-                                                <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                        <div className="p-6 sm:p-10 text-center">
+                                            <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-5 shadow-lg shadow-emerald-200">
+                                                <svg className="w-7 h-7 sm:w-10 sm:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </div>
-                                            <h4 className="text-xl font-bold text-gray-900 mb-2">ขั้นตอนนี้เสร็จสิ้นแล้ว</h4>
-                                            <p className="text-gray-500">
+                                            <h4 className="text-base sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">ขั้นตอนนี้เสร็จสิ้นแล้ว</h4>
+                                            <p className="text-xs sm:text-base text-gray-500">
                                                 เสร็จสิ้นเมื่อ: {selectedStep.completeDT ? new Date(selectedStep.completeDT).toLocaleString('th-TH') : '-'}
                                             </p>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                                        <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-12 text-center">
+                                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-5">
+                                        <svg className="w-7 h-7 sm:w-10 sm:h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">ไม่มีขั้นตอนที่ต้องทำ</h3>
-                                    <p className="text-gray-500">คุณไม่มีขั้นตอนที่ได้รับมอบหมายในใบงานนี้</p>
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">ไม่มีขั้นตอนที่ต้องทำ</h3>
+                                    <p className="text-xs sm:text-base text-gray-500">คุณไม่มีขั้นตอนที่ได้รับมอบหมายในใบงานนี้</p>
                                 </div>
                             )}
                         </div>

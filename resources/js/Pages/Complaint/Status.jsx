@@ -72,11 +72,11 @@ export default function Status({ auth, complaints, statusOptions }) {
         <AuthenticatedLayout user={auth.user} header="เปลี่ยนสถานะ">
             <Head title="เปลี่ยนสถานะ" />
 
-            <div className="py-6 min-h-screen bg-gray-50">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-4">
+            <div className="py-4 sm:py-6 min-h-screen bg-gradient-to-b from-orange-50/50 to-gray-50">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
 
-                    {/* Breadcrumb */}
-                    <nav className="text-sm text-gray-500">
+                    {/* Breadcrumb - Hidden on mobile */}
+                    <nav className="hidden sm:block text-sm text-gray-500">
                         <ol className="list-none p-0 inline-flex items-center gap-2">
                             <li className="hover:text-gray-700 transition-colors cursor-default">รายการ</li>
                             <li className="text-gray-400">/</li>
@@ -93,85 +93,126 @@ export default function Status({ auth, complaints, statusOptions }) {
                         </ol>
                     </nav>
 
-                    <h1 className="text-xl font-bold text-gray-900">เปลี่ยนสถานะ</h1>
+                    {/* Page Title */}
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-200 sm:hidden">
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">เปลี่ยนสถานะ</h1>
+                    </div>
 
                     {/* Header Card - เลขและชื่อใบงาน */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <p className="text-sm text-gray-500 mb-2">เลขและชื่อใบงาน</p>
-                        <p className="text-gray-900 font-medium pl-6 text-base">{displayText}</p>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                        <div className="flex items-start gap-3">
+                            <div className="hidden sm:flex w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm text-gray-500 mb-1">เลขและชื่อใบงาน</p>
+                                <p className="text-gray-900 font-semibold text-sm sm:text-base break-words">{displayText}</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Main Card with Tabs */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                        {/* Tabs */}
-                        <div className="border-b border-gray-100 px-6">
-                            <nav className="flex gap-8">
+                        {/* Tabs - Scrollable on mobile */}
+                        <div className="border-b border-gray-100 overflow-x-auto">
+                            <nav className="flex min-w-max px-4 sm:px-6">
                                 <button
                                     onClick={() => setActiveTab('status')}
-                                    className={`py-4 text-sm font-medium border-b-2 transition-all -mb-px
+                                    className={`py-3 sm:py-4 px-4 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap
                                         ${activeTab === 'status'
                                             ? 'border-amber-500 text-amber-600'
                                             : 'border-transparent text-gray-400 hover:text-gray-600'
                                         }`}
                                 >
-                                    หน้าเปลี่ยนสถานะ
+                                    <span className="flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        เปลี่ยนสถานะ
+                                    </span>
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('details')}
-                                    className={`py-4 text-sm font-medium border-b-2 transition-all -mb-px
+                                    className={`py-3 sm:py-4 px-4 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap
                                         ${activeTab === 'details'
                                             ? 'border-amber-500 text-amber-600'
                                             : 'border-transparent text-gray-400 hover:text-gray-600'
                                         }`}
                                 >
-                                    หน้ารายละเอียดแจ้งซ่อม
+                                    <span className="flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        รายละเอียด
+                                    </span>
                                 </button>
                             </nav>
                         </div>
 
                         {/* Tab Content */}
-                        <div className="p-6 md:p-8">
+                        <div className="p-4 sm:p-6 md:p-8">
 
                             {/* Tab 1: เปลี่ยนสถานะ */}
                             {activeTab === 'status' && (
                                 <form onSubmit={handleSubmit}>
-                                    <div className="mb-12">
-                                        <label className="block text-sm text-gray-700 mb-3">
+                                    <div className="mb-8 sm:mb-12">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">
                                             เปลี่ยนสถานะการดำเนินงาน
                                         </label>
-                                        <select
-                                            value={selectedStatus}
-                                            onChange={(e) => setSelectedStatus(e.target.value)}
-                                            className="w-full max-w-xs px-4 py-3 pr-10 border border-amber-300 rounded-xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-gray-700 cursor-pointer hover:border-amber-400"
-                                        >
-                                            <option value="finished">ดำเนินการเสร็จสิ้น</option>
-                                        </select>
-                                        <p className="text-xs text-gray-400 mt-2">สถานะปัจจุบัน: รับเรื่อง → เปลี่ยนเป็น: ดำเนินการเสร็จสิ้น</p>
+                                        <div className="relative">
+                                            <select
+                                                value={selectedStatus}
+                                                onChange={(e) => setSelectedStatus(e.target.value)}
+                                                className="w-full sm:max-w-xs px-4 py-3.5 pr-10 border-2 border-amber-200 rounded-xl bg-amber-50/50 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-gray-700 cursor-pointer hover:border-amber-300 font-medium"
+                                            >
+                                                <option value="finished">ดำเนินการเสร็จสิ้น</option>
+                                            </select>
+                                        </div>
+                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-3 sm:max-w-md">
+                                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span>สถานะปัจจุบัน: <span className="text-blue-600 font-medium">รับเรื่อง</span> → เปลี่ยนเป็น: <span className="text-green-600 font-medium">ดำเนินการเสร็จสิ้น</span></span>
+                                        </div>
                                     </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex justify-center gap-4 pt-4">
+                                    {/* Action Buttons - Full width on mobile */}
+                                    <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4">
                                         <Link
                                             href={route('complaints.index')}
-                                            className="px-10 py-3 border-2 border-amber-500 text-amber-500 rounded-full font-medium hover:bg-amber-50 transition-all hover:shadow-sm active:scale-95"
+                                            className="w-full sm:w-auto px-8 sm:px-10 py-3.5 border-2 border-amber-500 text-amber-600 rounded-xl sm:rounded-full font-semibold hover:bg-amber-50 transition-all hover:shadow-sm active:scale-[0.98] text-center"
                                         >
                                             ย้อนกลับ
                                         </Link>
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="px-10 py-3 bg-amber-500 text-white rounded-full font-medium hover:bg-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md active:scale-95"
+                                            className="w-full sm:w-auto px-8 sm:px-10 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl sm:rounded-full font-semibold hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-200 hover:shadow-xl active:scale-[0.98]"
                                         >
                                             {isSubmitting ? (
-                                                <span className="flex items-center gap-2">
-                                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                                     </svg>
                                                     กำลังอัปเดต...
                                                 </span>
-                                            ) : 'อัปเดตสถานะ'}
+                                            ) : (
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    อัปเดตสถานะ
+                                                </span>
+                                            )}
                                         </button>
                                     </div>
                                 </form>

@@ -178,9 +178,30 @@ class ComplaintController extends Controller
                 ->toArray();
         }
 
-        // 4. Sorting & Pagination
-        $complaints = $query->latest()
-            ->paginate(10)
+        // 4. Custom Sorting: Priority 3 (Very Urgent) first, then Personal Match, then by date
+        if (!empty($personalMatches)) {
+            $matchedIdsStr = implode(',', $personalMatches);
+            $query->orderByRaw("
+                CASE 
+                    WHEN priority = 3 THEN 0 
+                    WHEN complaint_id IN ({$matchedIdsStr}) THEN 1 
+                    ELSE 2 
+                END ASC,
+                created_at DESC
+            ");
+        } else {
+            // No personal matches, just sort by priority then date
+            $query->orderByRaw("
+                CASE 
+                    WHEN priority = 3 THEN 0 
+                    ELSE 1 
+                END ASC,
+                created_at DESC
+            ");
+        }
+
+        // 5. Pagination
+        $complaints = $query->paginate(10)
             ->withQueryString()
             ->through(function ($item) use ($personalMatches) {
                 return [
@@ -189,6 +210,7 @@ class ComplaintController extends Controller
                     'title' => $item->title,
                     'description' => $item->description,
                     'priority' => $this->mapPriority($item->priority),
+                    'raw_priority' => $item->priority,
                     'status' => $this->mapStatus($item->status),
                     'raw_status' => $item->status,
                     'reporter' => $item->account ? $item->account->name : 'Unknown',

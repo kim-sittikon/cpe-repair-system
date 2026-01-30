@@ -66,21 +66,42 @@ export default function Index({ auth, repairs, filters }) {
 
     // Helper: Priority Badge (compact for table)
     const renderPriority = (priority, hasPersonalMatch = false) => {
-        switch (priority) {
-            case 'เร่งด่วนมาก':
-                return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-rose-500 text-white whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                        เร่งด่วน
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 whitespace-nowrap">
-                        ปกติ
-                    </span>
-                );
+        const badge = hasPersonalMatch ? (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-sm">
+                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
+                สำหรับคุณ
+            </span>
+        ) : null;
+
+        // ถ้ามี personal match และเป็นระดับปกติ ให้แสดงแค่ badge "สำหรับคุณ" อย่างเดียว
+        if (hasPersonalMatch && (priority === 'ปกติ' || !priority || priority === 'normal')) {
+            return <div className="flex flex-col gap-1">{badge}</div>;
         }
+
+        const getPriorityContent = () => {
+            switch (priority) {
+                case 'เร่งด่วนมาก':
+                    return (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-rose-500 text-white whitespace-nowrap">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                            เร่งด่วน
+                        </span>
+                    );
+                default:
+                    return (
+                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 whitespace-nowrap">
+                            ปกติ
+                        </span>
+                    );
+            }
+        };
+
+        return (
+            <div className="flex flex-col gap-1">
+                {getPriorityContent()}
+                {badge}
+            </div>
+        );
     };
 
     // Helper: Status Badge (compact for table)
@@ -350,12 +371,6 @@ export default function Index({ auth, repairs, filters }) {
                                             <div className="flex items-center justify-between gap-2 mb-2">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <span className="text-sm font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg">{item.id}</span>
-                                                    {item.hasPersonalMatch && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-sm">
-                                                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
-                                                            สำหรับคุณ
-                                                        </span>
-                                                    )}
                                                 </div>
                                                 {renderStatus(item.status)}
                                             </div>
@@ -381,7 +396,26 @@ export default function Index({ auth, repairs, filters }) {
                                                     </svg>
                                                     {item.created_at}
                                                 </span>
-                                                {renderPriority(item.priority, false)}
+                                                {/* Priority Badge */}
+                                                {item.priority === 'เร่งด่วนมาก' && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-rose-500 text-white whitespace-nowrap">
+                                                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                                        เร่งด่วน
+                                                    </span>
+                                                )}
+                                                {/* For You Badge - Always show when hasPersonalMatch is true */}
+                                                {item.hasPersonalMatch && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-sm">
+                                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
+                                                        สำหรับคุณ
+                                                    </span>
+                                                )}
+                                                {/* Normal Priority Badge - Only show when NOT hasPersonalMatch and NOT Very Urgent */}
+                                                {!item.hasPersonalMatch && item.priority !== 'เร่งด่วนมาก' && (
+                                                    <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 whitespace-nowrap">
+                                                        ปกติ
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

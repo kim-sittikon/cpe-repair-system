@@ -270,11 +270,12 @@ export default function UserList({ activeUsers, pendingUsers }) {
                                     <div className="mt-3 flex gap-2">
                                         {activeTab === 'active' ? (
                                             <>
-                                                <button
+                                                <Link
+                                                    href={route('admin.users.edit', user.account_id)}
                                                     className="flex-1 text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1"
                                                 >
                                                     <User className="w-3 h-3" /> แก้ไขข้อมูล
-                                                </button>
+                                                </Link>
                                                 <Link
                                                     href={route('admin.users.suspend', user.account_id)}
                                                     className="flex-1 text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1"
@@ -439,7 +440,7 @@ export default function UserList({ activeUsers, pendingUsers }) {
                                                                 <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100 font-semibold mb-1">
                                                                     จัดการบัญชี
                                                                 </div>
-                                                                <Dropdown.Link href="#" className="flex items-center gap-2 group">
+                                                                <Dropdown.Link href={route('admin.users.edit', user.account_id)} className="flex items-center gap-2 group">
                                                                     <User className="w-4 h-4 text-gray-400 group-hover:text-blue-500" /> แก้ไขข้อมูล
                                                                 </Dropdown.Link>
                                                                 <Dropdown.Link

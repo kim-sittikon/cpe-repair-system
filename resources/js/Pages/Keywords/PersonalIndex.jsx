@@ -136,25 +136,25 @@ export default function PersonalIndex({ auth, personalKeywords = [], globalKeywo
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                     {/* Header */}
-                    <div className="mb-8">
+                    <div className="mb-6 sm:mb-8">
                         <div className="flex items-center text-sm text-gray-500 mb-2 font-medium">
                             <span>{routePrefix}</span>
                             <span className="mx-2 text-gray-400">/</span>
                             <span className="text-gray-800">กำหนดคีย์เวิร์ดส่วนตัว</span>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">กำหนดคีย์เวิร์ดส่วนตัว</h1>
-                            <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm tracking-wide ${badgeColor}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">กำหนดคีย์เวิร์ดส่วนตัว</h1>
+                            <span className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-sm tracking-wide w-fit ${badgeColor}`}>
                                 {groupName}
                             </span>
                         </div>
                     </div>
 
                     {/* Main Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
 
-                        {/* LEFT: Global List (Paginated) */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full min-h-[500px]">
+                        {/* LEFT: Global List (Paginated) - HIDDEN on mobile */}
+                        <div className="hidden md:flex bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-col h-full min-h-[500px]">
                             <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -217,27 +217,27 @@ export default function PersonalIndex({ auth, personalKeywords = [], globalKeywo
                             )}
                         </div>
 
-                        {/* RIGHT: Add + Personal List */}
-                        <div className="space-y-6">
+                        {/* RIGHT: Add + Personal List (Full width on mobile) */}
+                        <div className="space-y-4 md:space-y-6 md:col-span-1">
 
                             {/* Add Form */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                                <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
                                     <div className={`p-1.5 rounded-md ${isRepair ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                                         </svg>
                                     </div>
                                     เพิ่มคีย์เวิร์ดใหม่
                                 </h2>
-                                <form onSubmit={handleSubmit} className="flex flex-col gap-2 mb-6">
-                                    <div className="flex gap-3 items-stretch h-12">
+                                <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:gap-3">
+                                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-stretch">
                                         <div className="flex-1">
                                             <input
                                                 type="text"
                                                 value={form.data.keyword}
                                                 onChange={(e) => form.setData('keyword', e.target.value)}
-                                                className="w-full h-full px-4 bg-white border-2 border-gray-200 rounded-lg focus:border-black focus:ring-0 transition-all outline-none text-gray-800 text-base font-medium placeholder-gray-400"
+                                                className="w-full h-11 sm:h-12 px-4 bg-white border-2 border-gray-200 rounded-lg focus:border-black focus:ring-0 transition-all outline-none text-gray-800 text-sm sm:text-base font-medium placeholder-gray-400"
                                                 placeholder="พิมพ์คำที่ต้องการ..."
                                                 required
                                             />
@@ -245,14 +245,14 @@ export default function PersonalIndex({ auth, personalKeywords = [], globalKeywo
                                         <button
                                             type="submit"
                                             disabled={form.processing}
-                                            className={`px-8 h-full text-white font-bold text-lg rounded-lg shadow-md transform transition-all whitespace-nowrap ${addButtonStyle} flex items-center gap-2`}
+                                            className={`h-11 sm:h-12 px-6 sm:px-8 text-white font-bold text-base sm:text-lg rounded-lg shadow-md transform transition-all whitespace-nowrap ${addButtonStyle} flex items-center justify-center gap-2`}
                                         >
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
                                             เพิ่ม
                                         </button>
                                     </div>
                                     {form.errors.keyword && (
-                                        <p className="text-sm font-bold text-red-500 animate-pulse flex items-center gap-1 ml-1">
+                                        <p className="text-xs sm:text-sm font-bold text-red-500 animate-pulse flex items-center gap-1">
                                             🚨 {form.errors.keyword}
                                         </p>
                                     )}
@@ -260,17 +260,65 @@ export default function PersonalIndex({ auth, personalKeywords = [], globalKeywo
                             </div>
 
                             {/* Personal List */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px] flex flex-col">
-                                <div className="px-6 py-5 border-b border-gray-100 bg-white">
-                                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[300px] sm:min-h-[400px] flex flex-col">
+                                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-white">
+                                    <h2 className="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
                                         รายการคีย์เวิร์ดของฉัน
+                                        {displayPersonal.length > 0 && (
+                                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">
+                                                {displayPersonal.length} รายการ
+                                            </span>
+                                        )}
                                     </h2>
                                 </div>
                                 <div className="overflow-x-auto flex-1">
-                                    <table className="w-full">
+                                    {/* Mobile Card Layout */}
+                                    <div className="sm:hidden divide-y divide-gray-100">
+                                        {displayPersonal.length > 0 ? (
+                                            displayPersonal.map((keyword, index) => (
+                                                <div key={keyword.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                            <span className="flex-shrink-0 w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-500">
+                                                                {index + 1}
+                                                            </span>
+                                                            <span className="text-sm font-semibold text-gray-800 truncate">
+                                                                {keyword.keyword}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex gap-1.5 flex-shrink-0">
+                                                            <button
+                                                                onClick={() => handleEdit(keyword)}
+                                                                className="w-8 h-8 flex items-center justify-center bg-yellow-50 border border-yellow-200 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-all"
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(keyword)}
+                                                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-16 text-center text-gray-400 text-sm">
+                                                <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                </svg>
+                                                ยังไม่ได้เพิ่มคีย์เวิร์ด<br />
+                                                <span className="text-xs text-gray-300">เพิ่มคีย์เวิร์ดแรกของคุณด้านบน</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Desktop Table Layout */}
+                                    <table className="w-full hidden sm:table">
                                         <thead className="bg-gray-50 border-b border-gray-100">
                                             <tr>
                                                 <th className="px-4 py-4 text-center text-sm font-bold text-gray-500 w-16">ลำดับ</th>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { Camera, Save, ArrowLeft, Info, LayoutTemplate, Eye, AlertCircle, CheckCircle2, PanelRightClose, PanelRightOpen, Image as ImageIcon } from 'lucide-react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
+import { Camera, Save, ArrowLeft, Info, LayoutTemplate, Eye, AlertCircle, CheckCircle2, PanelRightClose, PanelRightOpen, Image as ImageIcon, X, Trash2, AlertTriangle } from 'lucide-react';
 
 export default function Create({ auth, latestAnnouncements }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -15,6 +15,8 @@ export default function Create({ auth, latestAnnouncements }) {
     const [preview, setPreview] = useState(null);
     const [showPreview, setShowPreview] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [deleteModal, setDeleteModal] = useState({ show: false, news: null });
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -35,6 +37,24 @@ export default function Create({ auth, latestAnnouncements }) {
         });
     };
 
+    const handleDeleteClick = (news) => {
+        setDeleteModal({ show: true, news });
+    };
+
+    const confirmDelete = () => {
+        if (!deleteModal.news) return;
+        setIsDeleting(true);
+        router.delete(route('announcements.destroy', deleteModal.news.id), {
+            onSuccess: () => {
+                setDeleteModal({ show: false, news: null });
+                setIsDeleting(false);
+            },
+            onError: () => {
+                setIsDeleting(false);
+            }
+        });
+    };
+
     // Filter announcements for the "Manage" tab
     const filteredAnnouncements = latestAnnouncements?.filter(news =>
         news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,32 +70,121 @@ export default function Create({ auth, latestAnnouncements }) {
         <AuthenticatedLayout user={auth.user}>
             <Head title="จัดการข่าวสารประชาสัมพันธ์" />
 
+            {/* Delete Confirmation Modal */}
+            {deleteModal.show && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !isDeleting && setDeleteModal({ show: false, news: null })} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+                        <button
+                            onClick={() => !isDeleting && setDeleteModal({ show: false, news: null })}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                            disabled={isDeleting}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                                <Trash2 className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">ยืนยันการลบประกาศ</h3>
+                            <p className="text-gray-600 text-sm mb-2">
+                                คุณต้องการลบประกาศนี้หรือไม่?
+                            </p>
+                            {deleteModal.news && (
+                                <p className="text-gray-800 font-medium text-sm bg-gray-50 py-2 px-3 rounded-lg mb-4">
+                                    "{deleteModal.news.title}"
+                                </p>
+                            )}
+                            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl mb-6">
+                                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                                <span className="text-xs text-amber-700">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteModal({ show: false, news: null })}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                >
+                                    ยกเลิก
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            กำลังลบ...
+                                        </>
+                                    ) : (
+                                        'ลบประกาศ'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
             <div className="py-8 bg-gray-50/50 min-h-screen transition-colors duration-500">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                     {/* Header Section */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                        <div>
-                            <h2 className="text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-3">
-                                <LayoutTemplate className="w-8 h-8 text-[#F59E0B]" />
-                                จัดการข่าวสาร / ประกาศ
+                    <div className="flex flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-xl sm:text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-2 sm:gap-3">
+                                <LayoutTemplate className="w-6 h-6 sm:w-8 sm:h-8 text-[#F59E0B] flex-shrink-0" />
+                                <span className="truncate">จัดการข่าวสาร / ประกาศ</span>
                             </h2>
-                            <p className="text-gray-500 mt-2 text-sm pl-11">
+                            <p className="hidden sm:block text-gray-500 mt-2 text-sm pl-11">
                                 สร้างข่าวประชาสัมพันธ์ใหม่ หรือจัดการข่าวสารเดิมที่มีอยู่
                             </p>
                         </div>
 
+                        {/* Mobile: Tab buttons in header */}
+                        <div className="sm:hidden bg-white p-1 rounded-xl shadow-sm border border-gray-100 flex gap-1 flex-shrink-0">
+                            <button
+                                onClick={() => setActiveTab('create')}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'create'
+                                    ? 'bg-[#F59E0B] text-white shadow-sm'
+                                    : 'text-gray-500 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <Save className="w-3.5 h-3.5" />
+                                สร้าง
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('manage')}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'manage'
+                                    ? 'bg-[#F59E0B] text-white shadow-sm'
+                                    : 'text-gray-500 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <LayoutTemplate className="w-3.5 h-3.5" />
+                                จัดการ
+                            </button>
+                        </div>
+
+                        {/* Desktop: Back button */}
                         <Link
                             href={route('dashboard')}
-                            className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 hover:text-gray-800 transition-all shadow-sm flex items-center gap-2 self-start md:self-auto"
+                            className="hidden sm:flex px-5 py-2.5 bg-white border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 hover:text-gray-800 transition-all shadow-sm items-center gap-2"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             กลับเมนูหลัก
                         </Link>
                     </div>
 
-                    {/* Tab Navigation */}
-                    <div className="mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex flex-wrap gap-1">
+                    {/* Desktop: Tab Navigation */}
+                    <div className="hidden sm:inline-flex mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 flex-wrap gap-1">
                         <button
                             onClick={() => setActiveTab('create')}
                             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${activeTab === 'create'
@@ -104,7 +213,8 @@ export default function Create({ auth, latestAnnouncements }) {
                         {/* -------------------- TAB 1: CREATE -------------------- */}
                         {activeTab === 'create' && (
                             <div className="animate-fade-in-up">
-                                <div className="flex justify-end items-center gap-3 mb-6">
+                                {/* Desktop action buttons */}
+                                <div className="hidden sm:flex justify-end items-center gap-3 mb-6">
                                     <button
                                         type="button"
                                         onClick={() => setShowPreview(!showPreview)}
@@ -206,16 +316,59 @@ export default function Create({ auth, latestAnnouncements }) {
 
                                         {/* Card: Image Upload */}
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className="p-6 border-b border-gray-100 bg-gray-50/30">
-                                                <h3 className="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                                            <div className="p-4 sm:p-6 border-b border-gray-100 bg-gray-50/30">
+                                                <h3 className="font-semibold text-base sm:text-lg text-gray-800 flex items-center gap-2">
                                                     <ImageIcon className="w-5 h-5 text-gray-400" />
                                                     รูปภาพประกอบ
                                                 </h3>
                                             </div>
-                                            <div className="p-6">
+                                            <div className="p-4 sm:p-6">
+                                                {/* Mobile: Compact attach button style */}
+                                                <label
+                                                    htmlFor="file-upload-mobile"
+                                                    className="sm:hidden"
+                                                >
+                                                    {preview ? (
+                                                        <div className="space-y-3">
+                                                            <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                                                                <img src={preview} alt="Preview" className="w-full h-48 object-contain" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        setPreview(null);
+                                                                        setData('image', null);
+                                                                    }}
+                                                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-medium cursor-pointer hover:bg-gray-100 transition-colors">
+                                                                <Camera className="w-5 h-5 text-[#F59E0B]" />
+                                                                <span>เปลี่ยนรูปภาพ</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-dashed border-[#F59E0B]/40 rounded-xl cursor-pointer hover:border-[#F59E0B] hover:from-orange-100 hover:to-amber-100 transition-all">
+                                                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                                                <Camera className="w-6 h-6 text-[#F59E0B]" />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className="font-semibold text-gray-700">แนบรูปภาพ</p>
+                                                                <p className="text-xs text-gray-400">PNG, JPG, GIF (สูงสุด 5MB)</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <input id="file-upload-mobile" name="file-upload-mobile" type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                                </label>
+
+                                                {/* Desktop: Full dropzone style */}
                                                 <label
                                                     htmlFor="file-upload"
-                                                    className={`relative group flex flex-col items-center justify-center w-full h-80 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 overflow-hidden bg-gray-50/50 ${preview ? 'border-gray-200' : 'border-gray-300 hover:border-[#F59E0B] hover:bg-orange-50/30'}`}
+                                                    className={`hidden sm:flex relative group flex-col items-center justify-center w-full h-80 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 overflow-hidden bg-gray-50/50 ${preview ? 'border-gray-200' : 'border-gray-300 hover:border-[#F59E0B] hover:bg-orange-50/30'}`}
                                                 >
                                                     {preview ? (
                                                         <div className="relative w-full h-full group-hover:opacity-95 transition-opacity">
@@ -242,6 +395,25 @@ export default function Create({ auth, latestAnnouncements }) {
                                                 {errors.image && <p className="text-red-500 text-sm mt-3 text-center flex items-center justify-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.image}</p>}
                                             </div>
                                         </div>
+
+                                        {/* Mobile: Publish button at bottom */}
+                                        <button
+                                            onClick={submit}
+                                            disabled={processing}
+                                            className="sm:hidden w-full px-6 py-4 bg-[#F59E0B] text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-xl hover:bg-[#d97706] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {processing ? (
+                                                <span className="flex items-center gap-2">
+                                                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    กำลังบันทึก...
+                                                </span>
+                                            ) : (
+                                                <>
+                                                    <Save className="w-5 h-5" />
+                                                    เผยแพร่ประกาศ
+                                                </>
+                                            )}
+                                        </button>
 
                                     </div>
 
@@ -315,33 +487,124 @@ export default function Create({ auth, latestAnnouncements }) {
                         {/* -------------------- TAB 2: MANAGE -------------------- */}
                         {activeTab === 'manage' && (
                             <div className="animate-fade-in-up">
-                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                     {/* Action Bar */}
-                                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
-                                        <div>
-                                            <h3 className="font-bold text-lg text-gray-800">รายการประกาศทั้งหมด ({filteredAnnouncements.length})</h3>
-                                            <p className="text-xs text-gray-500">จัดการ แก้ไข หรือลบประกาศของคุณ</p>
-                                        </div>
-
-                                        {/* Search Input */}
-                                        <div className="relative w-full md:w-72">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                                </svg>
+                                    <div className="p-4 sm:p-6 border-b border-gray-100 bg-gray-50/50">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                                            <div>
+                                                <h3 className="font-bold text-base sm:text-lg text-gray-800">รายการประกาศทั้งหมด ({filteredAnnouncements.length})</h3>
+                                                <p className="text-xs text-gray-500 hidden sm:block">จัดการ แก้ไข หรือลบประกาศของคุณ</p>
                                             </div>
-                                            <input
-                                                type="text"
-                                                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent sm:text-sm transition-shadow"
-                                                placeholder="ค้นหาชื่อประกาศ..."
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                            />
+
+                                            {/* Search Input */}
+                                            <div className="relative w-full sm:w-72">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                    </svg>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    className="block w-full pl-9 sm:pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent text-sm transition-shadow"
+                                                    placeholder="ค้นหาชื่อประกาศ..."
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Table Content */}
-                                    <div className="overflow-x-auto">
+                                    {/* Mobile: Card Layout */}
+                                    <div className="sm:hidden">
+                                        {filteredAnnouncements.length > 0 ? (
+                                            <div className="divide-y divide-gray-100">
+                                                {filteredAnnouncements.map((news) => (
+                                                    <div key={news.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                                                        <div className="flex gap-3">
+                                                            {/* Thumbnail */}
+                                                            <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+                                                                {news.image ? (
+                                                                    <img
+                                                                        src={`/storage/${news.image}`}
+                                                                        alt="Thumbnail"
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.parentNode.classList.add('flex', 'items-center', 'justify-center', 'text-gray-300');
+                                                                            e.target.parentNode.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="flex items-center justify-center w-full h-full text-gray-300 bg-gray-50">
+                                                                        <LayoutTemplate className="w-6 h-6" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Content */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 leading-snug">
+                                                                        {news.title}
+                                                                    </h4>
+                                                                    {news.is_urgent && (
+                                                                        <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600 border border-red-100">
+                                                                            <AlertCircle className="w-2.5 h-2.5 mr-0.5" />
+                                                                            ด่วน
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-gray-500 text-xs line-clamp-2 mt-1 leading-relaxed">
+                                                                    {news.detail}
+                                                                </p>
+                                                                <div className="flex items-center justify-between mt-2">
+                                                                    <span className="text-[10px] text-gray-400">
+                                                                        {new Date(news.created_at).toLocaleDateString('th-TH', {
+                                                                            day: 'numeric',
+                                                                            month: 'short',
+                                                                            year: 'numeric'
+                                                                        })}
+                                                                    </span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleDeleteClick(news)}
+                                                                        className="text-red-500 hover:text-white hover:bg-red-500 p-1.5 rounded-lg transition-all border border-red-100 hover:border-red-500"
+                                                                    >
+                                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-16 px-4 text-center">
+                                                <div className="flex flex-col items-center justify-center space-y-3">
+                                                    <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center">
+                                                        <LayoutTemplate className="w-7 h-7 opacity-40" />
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-500">
+                                                        {searchTerm ? 'ไม่พบประกาศที่ตรงกับคำค้นหา' : 'ยังไม่มีรายการประกาศ'}
+                                                    </p>
+                                                    {searchTerm && (
+                                                        <button
+                                                            onClick={() => setSearchTerm('')}
+                                                            className="text-[#F59E0B] text-sm hover:underline"
+                                                        >
+                                                            ล้างคำค้นหา
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Desktop: Table Layout */}
+                                    <div className="hidden sm:block overflow-x-auto">
                                         <table className="w-full text-left text-sm text-gray-600">
                                             <thead className="bg-gray-50 text-gray-500 font-medium uppercase text-xs">
                                                 <tr>
@@ -408,22 +671,16 @@ export default function Create({ auth, latestAnnouncements }) {
                                                                 })}
                                                             </td>
                                                             <td className="px-6 py-4 text-right align-top pt-5">
-                                                                <Link
-                                                                    href={route('announcements.destroy', news.id)}
-                                                                    method="delete"
-                                                                    as="button"
-                                                                    onClick={(e) => {
-                                                                        if (!confirm('คุณแน่ใจหรือไม่ที่จะลบประกาศนี้? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
-                                                                            e.preventDefault();
-                                                                        }
-                                                                    }}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDeleteClick(news)}
                                                                     className="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-lg transition-all duration-200 border border-red-100 hover:border-red-500 shadow-sm"
                                                                     title="ลบประกาศ"
                                                                 >
                                                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                     </svg>
-                                                                </Link>
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))
@@ -452,8 +709,9 @@ export default function Create({ auth, latestAnnouncements }) {
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div className="p-4 border-t border-gray-100 bg-gray-50/30 text-center text-xs text-gray-400">
-                                        แสดงผล {filteredAnnouncements.length} รายการจากทั้งหมด
+
+                                    <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50/30 text-center text-xs text-gray-400">
+                                        แสดงผล {filteredAnnouncements.length} รายการ
                                     </div>
                                 </div>
                             </div>

@@ -291,7 +291,7 @@ export default function MyJobs({ auth, mySteps }) {
                                                         </td>
                                                         <td className="px-3 py-4 text-center">
                                                             <Link
-                                                                href={route('repairs.jobs.show', step.job_id)}
+                                                                href={`${route('repairs.jobs.show', step.job_id)}?from=my`}
                                                                 className={`inline-flex items-center gap-1.5 px-3 py-2 ${action.bgColor} text-white text-xs font-bold rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200 shadow-md whitespace-nowrap`}
                                                             >
                                                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -359,7 +359,7 @@ export default function MyJobs({ auth, mySteps }) {
                                                             มอบหมายเมื่อ: {formatDate(step.created_at)}
                                                         </p>
                                                         <Link
-                                                            href={route('repairs.jobs.show', step.job_id)}
+                                                            href={`${route('repairs.jobs.show', step.job_id)}?from=my`}
                                                             className={`inline-flex items-center gap-2 mt-3 px-4 py-2 ${action.bgColor} text-white text-sm font-bold rounded-lg hover:shadow-md transition-all`}
                                                         >
                                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -493,7 +493,7 @@ export default function MyJobs({ auth, mySteps }) {
                                     ปิด
                                 </button>
                                 <Link
-                                    href={route('repairs.jobs.show', selectedStep.job_id)}
+                                    href={`${route('repairs.jobs.show', selectedStep.job_id)}?from=my`}
                                     className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transition-all"
                                 >
                                     ไปยังใบงาน

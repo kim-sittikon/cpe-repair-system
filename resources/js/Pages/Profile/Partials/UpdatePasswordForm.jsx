@@ -47,13 +47,11 @@ export default function UpdatePasswordForm({ className = '' }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Update Password
+                <h2 className="text-lg font-semibold text-gray-900">
+                    เปลี่ยนรหัสผ่าน
                 </h2>
-
                 <p className="mt-1 text-sm text-gray-600">
-                    Ensure your account is using a long, random password to stay
-                    secure.
+                    ใช้รหัสผ่านที่ยาวและซับซ้อนเพื่อความปลอดภัยของบัญชี
                 </p>
             </header>
 
@@ -61,9 +59,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                 <div>
                     <InputLabel
                         htmlFor="current_password"
-                        value="Current Password"
+                        value="รหัสผ่านปัจจุบัน"
                     />
-
                     <TextInput
                         id="current_password"
                         ref={currentPasswordInput}
@@ -74,8 +71,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                         type="password"
                         className="mt-1 block w-full"
                         autoComplete="current-password"
+                        placeholder="กรอกรหัสผ่านปัจจุบัน"
                     />
-
                     <InputError
                         message={errors.current_password}
                         className="mt-2"
@@ -83,8 +80,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="New Password" />
-
+                    <InputLabel htmlFor="password" value="รหัสผ่านใหม่" />
                     <TextInput
                         id="password"
                         ref={passwordInput}
@@ -93,17 +89,16 @@ export default function UpdatePasswordForm({ className = '' }) {
                         type="password"
                         className="mt-1 block w-full"
                         autoComplete="new-password"
+                        placeholder="กรอกรหัสผ่านใหม่"
                     />
-
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
                 <div>
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Confirm Password"
+                        value="ยืนยันรหัสผ่านใหม่"
                     />
-
                     <TextInput
                         id="password_confirmation"
                         value={data.password_confirmation}
@@ -113,8 +108,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                         type="password"
                         className="mt-1 block w-full"
                         autoComplete="new-password"
+                        placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
                     />
-
                     <InputError
                         message={errors.password_confirmation}
                         className="mt-2"
@@ -122,7 +117,9 @@ export default function UpdatePasswordForm({ className = '' }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing}>
+                        {processing ? 'กำลังบันทึก...' : 'บันทึก'}
+                    </PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -131,8 +128,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
+                        <p className="text-sm text-green-600 font-medium">
+                            ✓ เปลี่ยนรหัสผ่านสำเร็จ
                         </p>
                     </Transition>
                 </div>

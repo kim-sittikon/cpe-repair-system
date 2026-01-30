@@ -3,97 +3,92 @@ import InputLabel from '@/Components/UI/InputLabel';
 import PrimaryButton from '@/Components/UI/PrimaryButton';
 import TextInput from '@/Components/UI/TextInput';
 import { Transition } from '@headlessui/react';
-import { Link, useForm, usePage } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 
-export default function UpdateProfileInformation({
-    mustVerifyEmail,
-    status,
-    className = '',
-}) {
+export default function UpdateProfileInformation({ className = '' }) {
     const user = usePage().props.auth.user;
+
+    // Split name into first_name and last_name if not already separated
+    const nameParts = (user.name || '').split(' ');
+    const initialFirstName = user.first_name || nameParts[0] || '';
+    const initialLastName = user.last_name || nameParts.slice(1).join(' ') || '';
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
-            name: user.name,
-            email: user.email,
+            first_name: initialFirstName,
+            last_name: initialLastName,
         });
 
     const submit = (e) => {
         e.preventDefault();
-
         patch(route('profile.update'));
     };
 
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Profile Information
+                <h2 className="text-lg font-semibold text-gray-900">
+                    ข้อมูลโปรไฟล์
                 </h2>
-
                 <p className="mt-1 text-sm text-gray-600">
-                    Update your account's profile information and email address.
+                    แก้ไขชื่อและนามสกุลของคุณ
                 </p>
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
+                {/* Email - Read Only */}
                 <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                    <InputLabel htmlFor="email" value="อีเมล" />
+                    <div className="mt-1 flex items-center gap-2">
+                        <TextInput
+                            id="email"
+                            type="email"
+                            className="block w-full bg-gray-100 text-gray-500 cursor-not-allowed"
+                            value={user.email}
+                            disabled
+                            readOnly
+                        />
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                            (ไม่สามารถแก้ไขได้)
+                        </span>
+                    </div>
+                </div>
 
+                {/* First Name */}
+                <div>
+                    <InputLabel htmlFor="first_name" value="ชื่อ" />
                     <TextInput
-                        id="name"
+                        id="first_name"
                         className="mt-1 block w-full"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
+                        value={data.first_name}
+                        onChange={(e) => setData('first_name', e.target.value)}
                         required
                         isFocused
-                        autoComplete="name"
+                        autoComplete="given-name"
+                        placeholder="กรอกชื่อของคุณ"
                     />
-
-                    <InputError className="mt-2" message={errors.name} />
+                    <InputError className="mt-2" message={errors.first_name} />
                 </div>
 
+                {/* Last Name */}
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
+                    <InputLabel htmlFor="last_name" value="นามสกุล" />
                     <TextInput
-                        id="email"
-                        type="email"
+                        id="last_name"
                         className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
+                        value={data.last_name}
+                        onChange={(e) => setData('last_name', e.target.value)}
                         required
-                        autoComplete="username"
+                        autoComplete="family-name"
+                        placeholder="กรอกนามสกุลของคุณ"
                     />
-
-                    <InputError className="mt-2" message={errors.email} />
+                    <InputError className="mt-2" message={errors.last_name} />
                 </div>
-
-                {mustVerifyEmail && user.email_verified_at === null && (
-                    <div>
-                        <p className="mt-2 text-sm text-gray-800">
-                            Your email address is unverified.
-                            <Link
-                                href={route('verification.send')}
-                                method="post"
-                                as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            >
-                                Click here to re-send the verification email.
-                            </Link>
-                        </p>
-
-                        {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600">
-                                A new verification link has been sent to your
-                                email address.
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing}>
+                        {processing ? 'กำลังบันทึก...' : 'บันทึก'}
+                    </PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -102,8 +97,8 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
+                        <p className="text-sm text-green-600 font-medium">
+                            ✓ บันทึกสำเร็จ
                         </p>
                     </Transition>
                 </div>
