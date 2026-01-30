@@ -63,8 +63,26 @@ class ReportController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'location_id' => 'required_if:type,repair|nullable|exists:building,building_id',
-            'room' => 'nullable|string|max:255',
+            // Room is required if type is repair, OR if a building is selected (for any type)
+            'room' => [
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) use ($request) {
+                    // If type is repair, room is required
+                    if ($request->type === 'repair' && empty($value)) {
+                        $fail('กรุณาเลือกห้อง');
+                    }
+                    // If building is selected (for any type), room is required
+                    if (!empty($request->location_id) && empty($value)) {
+                        $fail('กรุณาเลือกห้อง (เมื่อเลือกอาคารแล้วต้องเลือกห้องด้วย)');
+                    }
+                },
+            ],
+            'images' => 'nullable|array|max:5',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+        ], [
+            'images.max' => 'อัปโหลดได้สูงสุด 5 รูป',
         ]);
 
         $user = auth()->user();

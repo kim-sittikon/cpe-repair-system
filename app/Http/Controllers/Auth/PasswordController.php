@@ -20,8 +20,10 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
+        // Account model uses 'password_hash' field, and it has 'hashed' cast
+        // so Laravel will automatically hash the value
         $request->user()->update([
-            'password' => Hash::make($validated['password']),
+            'password_hash' => $validated['password'],
         ]);
 
         return back();

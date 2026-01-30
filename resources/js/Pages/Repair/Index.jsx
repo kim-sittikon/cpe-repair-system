@@ -55,7 +55,7 @@ export default function Index({ auth, repairs, filters }) {
         router.get(route('repairs.index'), newParams, { preserveState: true, replace: true });
     };
 
-    // Toggle Checkbox (Multi Selection)
+    // Toggle Checkbox (Multi Selection for Create Job)
     const toggleSelect = (id) => {
         if (selectedItems.includes(id)) {
             setSelectedItems(selectedItems.filter(item => item !== id));
@@ -204,19 +204,23 @@ export default function Index({ auth, repairs, filters }) {
                                             alert('กรุณาเลือกรายการที่ต้องการเปลี่ยนสถานะ');
                                             return;
                                         }
+                                        if (selectedItems.length > 1) {
+                                            alert('เปลี่ยนสถานะได้ทีละ 1 รายการเท่านั้น');
+                                            return;
+                                        }
                                         const queryString = selectedItems.map(id => `ids[]=${encodeURIComponent(id)}`).join('&');
                                         router.visit(`/repairs/status?${queryString}`);
                                     }}
                                     disabled={selectedItems.length === 0}
                                     className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5
-                                        ${selectedItems.length > 0
+                                        ${selectedItems.length === 1
                                             ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
                                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    <span>เปลี่ยนสถานะ{selectedItems.length > 0 && ` (${selectedItems.length})`}</span>
+                                    <span>เปลี่ยนสถานะ{selectedItems.length === 1 && ` (1)`}</span>
                                 </button>
                             </div>
                             {/* Row 2: Search + Filter */}
@@ -277,19 +281,23 @@ export default function Index({ auth, repairs, filters }) {
                                             alert('กรุณาเลือกรายการที่ต้องการเปลี่ยนสถานะ');
                                             return;
                                         }
+                                        if (selectedItems.length > 1) {
+                                            alert('เปลี่ยนสถานะได้ทีละ 1 รายการเท่านั้น');
+                                            return;
+                                        }
                                         const queryString = selectedItems.map(id => `ids[]=${encodeURIComponent(id)}`).join('&');
                                         router.visit(`/repairs/status?${queryString}`);
                                     }}
                                     disabled={selectedItems.length === 0}
                                     className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2
-                                        ${selectedItems.length > 0
+                                        ${selectedItems.length === 1
                                             ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:-translate-y-0.5'
                                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                                 >
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    <span>เปลี่ยนสถานะ{selectedItems.length > 0 && ` (${selectedItems.length})`}</span>
+                                    <span>เปลี่ยนสถานะ{selectedItems.length === 1 && ` (1)`}</span>
                                 </button>
                             </div>
                             {/* Right: Filters */}

@@ -16,6 +16,8 @@ export default function Create({ auth, buildings = [] }) {
     });
 
     const [imagePreview, setImagePreview] = useState([]);
+    const [imageError, setImageError] = useState('');
+    const [localErrors, setLocalErrors] = useState({});
 
     // Logic to find the selected building and its rooms
     const selectedBuilding = buildings.find(b => String(b.building_id) === String(data.location_id));
@@ -23,6 +25,16 @@ export default function Create({ auth, buildings = [] }) {
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
+        const totalImages = data.images.length + files.length;
+
+        if (totalImages > 5) {
+            setImageError('สามารถอัปโหลดได้สูงสุด 5 รูป');
+            // Auto clear error after 3 seconds
+            setTimeout(() => setImageError(''), 3000);
+            return;
+        }
+
+        setImageError(''); // Clear any previous error
         setData('images', [...data.images, ...files]);
 
         const newPreviews = files.map(file => URL.createObjectURL(file));
@@ -31,6 +43,19 @@ export default function Create({ auth, buildings = [] }) {
 
     const submit = (e) => {
         e.preventDefault();
+
+        // Local validation: if building is selected, room must be selected too
+        const newLocalErrors = {};
+        if (data.location_id && !data.room) {
+            newLocalErrors.room = 'กรุณาเลือกห้อง (เมื่อเลือกอาคารแล้วต้องเลือกห้องด้วย)';
+        }
+
+        if (Object.keys(newLocalErrors).length > 0) {
+            setLocalErrors(newLocalErrors);
+            return;
+        }
+
+        setLocalErrors({});
         console.log('Submitting data:', data);
         post(route('report.store'));
     };
@@ -120,8 +145,14 @@ export default function Create({ auth, buildings = [] }) {
                                 <div className="space-y-1">
                                     <select
                                         value={data.room}
-                                        onChange={e => setData('room', e.target.value)}
-                                        className="w-full rounded-lg sm:rounded-md border-gray-300 shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] py-2 sm:py-2.5 text-sm sm:text-base text-gray-600"
+                                        onChange={e => {
+                                            setData('room', e.target.value);
+                                            // Clear local error when user selects a room
+                                            if (e.target.value) {
+                                                setLocalErrors(prev => ({ ...prev, room: '' }));
+                                            }
+                                        }}
+                                        className={`w-full rounded-lg sm:rounded-md border-gray-300 shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] py-2 sm:py-2.5 text-sm sm:text-base text-gray-600 ${(errors.room || localErrors.room) ? 'border-red-500' : ''}`}
                                     >
                                         <option value="">เลือกห้อง</option>
 
@@ -139,7 +170,7 @@ export default function Create({ auth, buildings = [] }) {
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.room && <div className="text-red-500 text-xs sm:text-sm">{errors.room}</div>}
+                                    {(errors.room || localErrors.room) && <div className="text-red-500 text-xs sm:text-sm">{errors.room || localErrors.room}</div>}
                                 </div>
                             </div>
                         </div>
@@ -194,6 +225,14 @@ export default function Create({ auth, buildings = [] }) {
                                 </label>
                                 <span className="text-xs text-gray-400">JPG, PNG ไม่เกิน 5 รูป (10MB)</span>
                             </div>
+
+                            {/* Image Error Message */}
+                            {imageError && (
+                                <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl animate-pulse">
+                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                    <span className="text-sm text-red-600 font-medium">{imageError}</span>
+                                </div>
+                            )}
 
                             {/* Selected files list */}
                             {imagePreview.length > 0 && (

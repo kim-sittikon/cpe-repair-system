@@ -97,7 +97,7 @@ class AdminUserController extends Controller
             'permissions' => [
                 'job_repair' => $validated['job_repair'] ?? false,
                 'job_admin' => $validated['job_admin'] ?? false,
-                'job_complaint' => $validated['job_complaint'] ?? true, // Default to true based on assumed logic
+                'job_complaint' => $validated['job_complaint'] ?? false,
             ],
             'invited_by' => auth()->id(),
             'expires_at' => now()->addHours(72), // 72 hours per plan

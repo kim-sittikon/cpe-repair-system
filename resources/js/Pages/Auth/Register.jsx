@@ -398,7 +398,8 @@ export default function Register() {
         data.name = `${data.firstName} ${data.lastName}`.trim();
 
         post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+            preserveScroll: true,
+            onSuccess: () => reset('password', 'password_confirmation'),
         });
     };
 
@@ -514,7 +515,20 @@ export default function Register() {
 
                             {/* Confirm Password */}
                             <div className="relative space-y-1">
-                                <InputLabel htmlFor="password_confirmation" value="ยืนยันรหัสผ่าน" className="text-gray-700 font-medium" />
+                                <div className="flex justify-between items-center">
+                                    <InputLabel htmlFor="password_confirmation" value="ยืนยันรหัสผ่าน" className="text-gray-700 font-medium" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="text-xs text-orange-500 hover:text-orange-600 font-semibold flex items-center gap-1 transition-colors"
+                                    >
+                                        {showConfirmPassword ? (
+                                            <><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" x2="23" y1="1" y2="23" /></svg> ซ่อนรหัสผ่าน</>
+                                        ) : (
+                                            <><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg> แสดงรหัสผ่าน</>
+                                        )}
+                                    </button>
+                                </div>
                                 <TextInput
                                     id="password_confirmation"
                                     type={showConfirmPassword ? "text" : "password"}
@@ -524,17 +538,6 @@ export default function Register() {
                                     placeholder="••••••••"
                                     required
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
-                                >
-                                    {showConfirmPassword ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" x2="23" y1="1" y2="23" /></svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
-                                    )}
-                                </button>
                                 <InputError message={errors.password_confirmation} className="mt-1" />
                             </div>
 
@@ -574,6 +577,7 @@ export default function Register() {
                                     </button>
                                 </div>
                                 {otpMessage && <p className="text-sm text-green-600 mt-1">{otpMessage}</p>}
+                                <InputError message={errors.otp} className="mt-1" />
                             </div>
 
                             {/* Terms */}
@@ -589,8 +593,8 @@ export default function Register() {
                                     <div className="relative flex items-center">
                                         <div
                                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${data.terms
-                                                    ? 'bg-orange-500 border-orange-500'
-                                                    : 'border-gray-300 bg-white hover:border-orange-400'
+                                                ? 'bg-orange-500 border-orange-500'
+                                                : 'border-gray-300 bg-white hover:border-orange-400'
                                                 }`}
                                         >
                                             {data.terms && (

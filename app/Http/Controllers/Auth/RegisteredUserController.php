@@ -114,9 +114,17 @@ class RegisteredUserController extends Controller
         \Illuminate\Support\Facades\Cache::forget('otp_' . $request->email); // Clear old first
         \Illuminate\Support\Facades\Cache::put('otp_' . $request->email, $otp, now()->addMinutes(5));
 
-        // Send Email
-        \Illuminate\Support\Facades\Mail::to($request->email)->send(new \App\Mail\OtpMail($otp));
-
-        return response()->json(['message' => 'ส่งรหัส OTP เรียบร้อยแล้ว']);
+        // Send Email with error handling
+        try {
+            \Illuminate\Support\Facades\Mail::to($request->email)->send(new \App\Mail\OtpMail($otp));
+            \Illuminate\Support\Facades\Log::info('OTP Email sent successfully to: ' . $request->email);
+            return response()->json(['message' => 'ส่งรหัส OTP เรียบร้อยแล้ว']);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('OTP Email failed: ' . $e->getMessage());
+            // Still return success because OTP is cached, user can try again
+            return response()->json([
+                'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (อาจใช้เวลาสักครู่)',
+            ]);
+        }
     }
 }

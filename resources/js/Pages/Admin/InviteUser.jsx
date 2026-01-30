@@ -9,7 +9,7 @@ export default function InviteUser({ recentInvites = [] }) {
         role: 'staff',
         job_repair: true,
         job_admin: false,
-        job_complaint: true,
+        job_complaint: false,  // Staff default: no complaint permission
     });
 
     // Seperate form for bulk upload
@@ -20,11 +20,11 @@ export default function InviteUser({ recentInvites = [] }) {
     // 🧠 Smart Logic: เปลี่ยนสิทธิ์ตาม Role อัตโนมัติ
     useEffect(() => {
         if (data.role === 'staff') {
-            // Staff: ต้องเป็นช่างซ่อม, ไม่ใช่แอดมิน
-            setData(prev => ({ ...prev, job_repair: true, job_admin: false, job_complaint: true }));
+            // Staff: ต้องเป็นช่างซ่อม, ไม่ใช่แอดมิน, ไม่มีร้องเรียน
+            setData(prev => ({ ...prev, job_repair: true, job_admin: false, job_complaint: false }));
         } else if (data.role === 'teacher') {
             // Teacher: ให้เลือกเอง แต่ default ไม่ใช่แอดมิน
-            setData(prev => ({ ...prev, job_admin: false, job_repair: false, job_complaint: true }));
+            setData(prev => ({ ...prev, job_admin: false, job_repair: false, job_complaint: false }));
         }
     }, [data.role]);
 

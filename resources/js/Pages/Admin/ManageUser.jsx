@@ -74,7 +74,7 @@ export default function ManageUser({ user, activeTab: initialTab = 'edit' }) {
     const isStaff = editForm.data.role === 'staff';
     const isTeacher = editForm.data.role === 'teacher';
 
-    const isSuspended = user.suspended_at !== null;
+    const isSuspended = user.suspension_type !== null && user.suspension_type !== undefined;
 
     return (
         <AuthenticatedLayout>
@@ -129,8 +129,8 @@ export default function ManageUser({ user, activeTab: initialTab = 'edit' }) {
                         <button
                             onClick={() => setActiveTab('edit')}
                             className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${activeTab === 'edit'
-                                    ? 'text-white bg-orange-500 shadow-lg shadow-orange-200'
-                                    : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
+                                ? 'text-white bg-orange-500 shadow-lg shadow-orange-200'
+                                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
                                 }`}
                         >
                             จัดการบัญชีผู้ใช้งาน
@@ -138,8 +138,8 @@ export default function ManageUser({ user, activeTab: initialTab = 'edit' }) {
                         <button
                             onClick={() => setActiveTab('suspend')}
                             className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${activeTab === 'suspend'
-                                    ? 'text-white bg-orange-500 shadow-lg shadow-orange-200'
-                                    : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
+                                ? 'text-white bg-orange-500 shadow-lg shadow-orange-200'
+                                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
                                 }`}
                         >
                             ระงับการใช้งานบัญชี
@@ -234,8 +234,8 @@ export default function ManageUser({ user, activeTab: initialTab = 'edit' }) {
                                                                     }
                                                                 }}
                                                                 className={`w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors ${editForm.data.role === role.value
-                                                                        ? 'bg-orange-50 text-orange-600 font-medium'
-                                                                        : 'text-gray-700'
+                                                                    ? 'bg-orange-50 text-orange-600 font-medium'
+                                                                    : 'text-gray-700'
                                                                     }`}
                                                             >
                                                                 {role.label}
