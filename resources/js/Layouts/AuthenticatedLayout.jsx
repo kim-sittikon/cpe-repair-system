@@ -1,8 +1,9 @@
 import Navbar from '@/Components/UI/Navbar';
+import BottomNavbar from '@/Components/UI/BottomNavbar';
 
 export default function Authenticated({ user, header, children }) {
     return (
-        <div className="min-h-screen flex flex-col bg-gray-100">
+        <div className="min-h-screen flex flex-col">
             {/* Navbar Only (No Sidebar) */}
             <Navbar user={user} />
 
@@ -15,15 +16,18 @@ export default function Authenticated({ user, header, children }) {
                 </header>
             )}
 
-            {/* Page Content (Push down for fixed navbar) */}
-            <main className="flex-1 pt-16 lg:pt-20">
+            {/* Page Content (Push down for fixed navbar, add bottom padding for mobile nav) */}
+            <main className="flex-1 pt-16 lg:pt-20 pb-20 lg:pb-0 bg-gray-50">
                 {children}
             </main>
 
-            {/* Footer (Global) */}
-            <div className="bg-[#4a4a4a] text-white py-4 text-center text-sm font-light tracking-wide mt-auto">
+            {/* Footer (Global) - Always at bottom, hidden on mobile when bottom nav is visible */}
+            <footer className="hidden lg:block bg-[#4a4a4a] text-white py-4 text-center text-sm font-light tracking-wide">
                 © 2025 Department of Computer Engineering, RMUTT. All rights reserved
-            </div>
+            </footer>
+
+            {/* Bottom Navigation for Mobile */}
+            <BottomNavbar />
         </div>
     );
 }

@@ -1,0 +1,18 @@
+# Docker Compose Override for Laravel Sail
+# Auto-restart all services when Docker starts
+
+services:
+  laravel.test:
+    restart: unless-stopped
+
+  mysql:
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+
+  mailpit:
+    restart: unless-stopped
+
+  cloudflared:
+    restart: unless-stopped

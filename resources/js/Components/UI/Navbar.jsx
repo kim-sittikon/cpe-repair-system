@@ -1,12 +1,24 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Dropdown from '@/Components/UI/Dropdown';
-import ResponsiveNavLink from '@/Components/UI/ResponsiveNavLink';
 
 export default function Navbar() {
     // ALL HOOKS MUST BE AT THE TOP (React Rules of Hooks)
     const { auth } = usePage().props;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+    const [expandedSections, setExpandedSections] = useState({});
+
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (showingNavigationDropdown) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showingNavigationDropdown]);
 
     // NOW we can safely check for user
     const user = auth?.user;
@@ -17,6 +29,67 @@ export default function Navbar() {
     const firstName = fullNameParts[0] || 'User';
     const lastName = fullNameParts.slice(1).join(' ') || '';
     const userRole = user.role || 'User';
+
+    // Toggle section expansion
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    // Close menu helper
+    const closeMenu = () => setShowingNavigationDropdown(false);
+
+    // Mobile Nav Link Component
+    const MobileNavLink = ({ href, children, icon, method, as }) => (
+        <Link
+            href={href}
+            method={method}
+            as={as}
+            onClick={closeMenu}
+            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors rounded-lg mx-2 text-[15px] font-medium"
+        >
+            {icon && <span className="text-gray-400 group-hover:text-orange-500">{icon}</span>}
+            <span>{children}</span>
+        </Link>
+    );
+
+    // Collapsible Section Component
+    const CollapsibleSection = ({ title, sectionKey, children, icon }) => {
+        const isExpanded = expandedSections[sectionKey] ?? false;
+        return (
+            <div className="border-b border-gray-100 last:border-b-0">
+                <button
+                    onClick={() => toggleSection(sectionKey)}
+                    className="flex items-center justify-between w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                            {icon}
+                        </span>
+                        <span className="font-semibold text-gray-800">{title}</span>
+                    </div>
+                    <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                >
+                    <div className="pb-2 pl-4">
+                        {children}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     // Helper for Dropdown Trigger Button (Orange Theme)
     const NavDropdownTrigger = ({ label }) => (
@@ -98,13 +171,14 @@ export default function Navbar() {
                                     </Dropdown.Trigger>
                                     <Dropdown.Content width="64">
                                         <DropdownHeader>เมนูช่าง</DropdownHeader>
-                                        <Dropdown.Link href="/dashboard?view=repair">หน้าหลัก</Dropdown.Link>
+                                        <Dropdown.Link href={route('repairs.dashboard')}>หน้าหลัก</Dropdown.Link>
+                                        <Dropdown.Link href={route('repairs.index')}>รายการแจ้งซ่อม</Dropdown.Link>
                                         <Dropdown.Link href="/announcements/create">สร้างข่าวสาร/ลบบบ</Dropdown.Link>
                                         <div className="border-t border-gray-100 my-1"></div>
-                                        <Dropdown.Link href="/jobs/all">จ๊อบรวม</Dropdown.Link>
-                                        <Dropdown.Link href="/jobs/my">จ๊อบของฉัน</Dropdown.Link>
+                                        <Dropdown.Link href={route('repairs.jobs.index')}>ใบงานรวม</Dropdown.Link>
+                                        <Dropdown.Link href={route('repairs.jobs.my')}>ใบงานของฉัน</Dropdown.Link>
                                         <div className="border-t border-gray-100 my-1"></div>
-                                        <Dropdown.Link href={route('repair.keywords')}>กำหนดคีย์เวิร์ด</Dropdown.Link>
+                                        <Dropdown.Link href={route('repairs.keywords')}>กำหนดคีย์เวิร์ด</Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -232,52 +306,173 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
-            <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' lg:hidden bg-[#F59E0B] border-t border-orange-600 shadow-xl'}>
-                <div className="pt-2 pb-3 space-y-1">
-                    <div className="px-4 py-2 text-xs font-bold text-orange-200 uppercase tracking-widest">เมนูทั่วไป</div>
-                    <ResponsiveNavLink href="/dashboard" className="text-white hover:bg-black/10 text-lg">หน้าแรก</ResponsiveNavLink>
-                    <ResponsiveNavLink href={route('report.create')} className="text-white hover:bg-black/10 text-lg">ฟอร์มแจ้งปัญหา</ResponsiveNavLink>
+            {/* Mobile Menu - Slide-in Sidebar */}
+            <div className="lg:hidden">
+                {/* Dark Overlay */}
+                <div
+                    className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${showingNavigationDropdown ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        }`}
+                    onClick={closeMenu}
+                />
 
-                    {user.job_repair && (
-                        <>
-                            <div className="px-4 py-2 text-xs font-bold text-orange-200 uppercase tracking-widest mt-4">เมนูช่าง</div>
-                            <ResponsiveNavLink href="/dashboard?view=repair" className="text-white pl-8 hover:bg-black/10">หน้าหลักแจ้งซ่อม</ResponsiveNavLink>
-                            <ResponsiveNavLink href={route('announcements.create')} className="text-white pl-8 hover:bg-black/10">สร้างข่าวสาร</ResponsiveNavLink>
-                            <ResponsiveNavLink href="/jobs/my" className="text-white pl-8 hover:bg-black/10">งานของฉัน</ResponsiveNavLink>
-                        </>
-                    )}
-                    {user.job_complaint && (
-                        <>
-                            <div className="px-4 py-2 text-xs font-bold text-orange-200 uppercase tracking-widest mt-4">เมนูร้องเรียน</div>
-                            <ResponsiveNavLink href="/dashboard?view=complaint" className="text-white pl-8 hover:bg-black/10">หน้าหลักร้องเรียน</ResponsiveNavLink>
-                        </>
-                    )}
-                    {user.job_admin && (
-                        <>
-                            <div className="px-4 py-2 text-xs font-bold text-orange-200 uppercase tracking-widest mt-4">เมนูผู้ดูแลระบบ</div>
-                            <ResponsiveNavLink href="/dashboard?view=admin" className="text-white pl-8 hover:bg-black/10">ผู้ดูแลระบบ</ResponsiveNavLink>
-                        </>
-                    )}
-                </div>
-
-                <div className="pt-6 pb-6 border-t border-orange-600 bg-orange-700/30">
-                    <div className="px-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-full bg-white text-[#F59E0B] flex items-center justify-center font-bold text-xl shadow-md">
-                            {firstName[0]}
-                        </div>
-                        <div>
-                            <div className="font-semibold text-lg text-white">
-                                {firstName} {lastName}
+                {/* Sidebar Panel */}
+                <div
+                    className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${showingNavigationDropdown ? 'translate-x-0' : 'translate-x-full'
+                        }`}
+                >
+                    {/* Sidebar Header */}
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-white text-orange-500 flex items-center justify-center font-bold text-lg shadow-md">
+                                {firstName[0]}
                             </div>
-                            <div className="font-light text-sm text-orange-200">{user.email}</div>
+                            <div>
+                                <div className="font-semibold text-white text-base">
+                                    {firstName} {lastName}
+                                </div>
+                                <div className="text-orange-100 text-sm">{userRole}</div>
+                            </div>
                         </div>
+                        <button
+                            onClick={closeMenu}
+                            className="p-2 rounded-full hover:bg-white/20 transition-colors"
+                        >
+                            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <div className="mt-4 space-y-2 px-2">
-                        <ResponsiveNavLink href={route('profile.edit')} className="text-white hover:bg-black/10 rounded-lg">Profile Settings</ResponsiveNavLink>
-                        <ResponsiveNavLink method="post" href={route('logout')} as="button" className="text-white hover:bg-black/10 rounded-lg">
-                            Log Out
-                        </ResponsiveNavLink>
+
+                    {/* Scrollable Menu Content */}
+                    <div className="overflow-y-auto h-[calc(100%-180px)]">
+                        {/* แจ้งปัญหา Section */}
+                        <CollapsibleSection
+                            title="แจ้งปัญหา"
+                            sectionKey="report"
+                            icon={
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            }
+                        >
+                            <MobileNavLink href="/dashboard">
+                                หน้าแรก
+                            </MobileNavLink>
+                            <MobileNavLink href={route('report.create')}>
+                                ฟอร์มแจ้งปัญหา
+                            </MobileNavLink>
+                            <MobileNavLink href={route('report.history')}>
+                                ประวัติการแจ้ง
+                            </MobileNavLink>
+                        </CollapsibleSection>
+
+                        {/* เมนูช่าง Section */}
+                        {user.job_repair && user.role !== 'student' && (
+                            <CollapsibleSection
+                                title="กลุ่มงานแจ้งซ่อม"
+                                sectionKey="repair"
+                                icon={
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                }
+                            >
+                                <MobileNavLink href={route('repairs.dashboard')}>
+                                    หน้าหลักแจ้งซ่อม
+                                </MobileNavLink>
+                                <MobileNavLink href={route('repairs.index')}>
+                                    รายการแจ้งซ่อม
+                                </MobileNavLink>
+                                <MobileNavLink href={route('announcements.create')}>
+                                    สร้างข่าวสาร
+                                </MobileNavLink>
+                                <MobileNavLink href={route('repairs.jobs.index')}>
+                                    ใบงานรวม
+                                </MobileNavLink>
+                                <MobileNavLink href={route('repairs.jobs.my')}>
+                                    ใบงานของฉัน
+                                </MobileNavLink>
+                            </CollapsibleSection>
+                        )}
+
+                        {/* เมนูร้องเรียน Section */}
+                        {user.job_complaint && user.role !== 'student' && (
+                            <CollapsibleSection
+                                title="กลุ่มงานร้องเรียน"
+                                sectionKey="complaint"
+                                icon={
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    </svg>
+                                }
+                            >
+                                <MobileNavLink href="/complaints/dashboard">
+                                    หน้าหลักร้องเรียน
+                                </MobileNavLink>
+                                <MobileNavLink href="/complaints/list">
+                                    รายการร้องเรียน
+                                </MobileNavLink>
+                                <MobileNavLink href="/complaints/keywords">
+                                    กำหนดคีย์เวิร์ด
+                                </MobileNavLink>
+                            </CollapsibleSection>
+                        )}
+
+                        {/* เมนูผู้ดูแลระบบ Section */}
+                        {user.job_admin && user.role !== 'student' && (
+                            <CollapsibleSection
+                                title="ผู้ดูแลระบบ"
+                                sectionKey="admin"
+                                icon={
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                }
+                            >
+                                <MobileNavLink href="/admin">
+                                    หน้าหลัก
+                                </MobileNavLink>
+                                <MobileNavLink href="/admin/users">
+                                    จัดการผู้ใช้งาน
+                                </MobileNavLink>
+                                <MobileNavLink href={route('admin.users.invite')}>
+                                    สร้างผู้ใช้งาน
+                                </MobileNavLink>
+                                <MobileNavLink href="/admin/locations">
+                                    เพิ่มอาคาร/ห้อง
+                                </MobileNavLink>
+                                <MobileNavLink href="/admin/keywords">
+                                    จัดการคีย์เวิร์ด
+                                </MobileNavLink>
+                            </CollapsibleSection>
+                        )}
+                    </div>
+
+                    {/* Bottom Action Buttons */}
+                    <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-gray-50 p-4 space-y-2">
+                        <Link
+                            href={route('profile.edit')}
+                            onClick={closeMenu}
+                            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-white border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            ตั้งค่าโปรไฟล์
+                        </Link>
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            onClick={closeMenu}
+                            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-red-50 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-100 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            ออกจากระบบ
+                        </Link>
                     </div>
                 </div>
             </div>

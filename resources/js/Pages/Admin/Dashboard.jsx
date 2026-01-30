@@ -71,7 +71,7 @@ export default function AdminDashboard({ auth, stats, chartData_activity, chartD
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                         {/* Users Card */}
                         <div className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-purple-500 transform hover:scale-105 transition-all duration-300">
                             <div className="flex items-center justify-between">

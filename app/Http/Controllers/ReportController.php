@@ -64,7 +64,7 @@ class ReportController extends Controller
             'description' => 'required|string',
             'location_id' => 'required_if:type,repair|nullable|exists:building,building_id',
             'room' => 'nullable|string|max:255',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240'
         ]);
 
         $user = auth()->user();

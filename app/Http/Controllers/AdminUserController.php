@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\UserInvitation;
+use App\Models\SuspensionLog;
 use App\Mail\UserInvitationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -40,8 +42,15 @@ class AdminUserController extends Controller
                 ];
             });
 
+        // Check and auto-expire temporary suspensions
+        $allUsers = Account::whereIn('status', ['active', 'suspended'])->orderBy('created_at', 'desc')->get();
+        $allUsers->each(fn($user) => $user->checkAndUpdateSuspensionStatus());
+        
+        // Re-fetch to get updated statuses
+        $activeUsers = Account::whereIn('status', ['active', 'suspended'])->orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/UserList', [
-            'activeUsers' => Account::active()->orderBy('created_at', 'desc')->get(),
+            'activeUsers' => $activeUsers,
             'pendingUsers' => $pendingUsers,
         ]);
     }
@@ -189,5 +198,103 @@ class AdminUserController extends Controller
         Mail::to($invitation->email)->send(
             new UserInvitationMail($url, $invitation->role)
         );
+    }
+
+    /**
+     * แสดงหน้าระงับบัญชี
+     */
+    public function suspend($id)
+    {
+        $user = Account::findOrFail($id);
+
+        return Inertia::render('Admin/SuspendUser', [
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * บันทึกการระงับบัญชี
+     */
+    public function storeSuspension($id, Request $request)
+    {
+        $user = Account::findOrFail($id);
+
+        // Safety Net 1: ห้ามแบนตัวเอง
+        if ($user->account_id === auth()->id()) {
+            return back()->with('error', 'ไม่สามารถระงับบัญชีของตัวเองได้');
+        }
+
+        // Safety Net 2: ห้ามแบน Admin (ถ้าเราไม่ใช่ Admin)
+        if ($user->role === 'admin' && auth()->user()->role !== 'admin') {
+            return back()->with('error', 'ไม่มีสิทธิ์ระงับบัญชี Admin');
+        }
+
+        $validated = $request->validate([
+            'type' => 'required|in:temporary,permanent',
+            'reason' => 'required|string|max:1000',
+            'suspension_start' => 'required_if:type,temporary|nullable|date',
+            'suspension_end' => 'required_if:type,temporary|nullable|date|after:suspension_start',
+        ]);
+
+        // บันทึก Log (พ.ร.บ. คอมฯ Compliant)
+        SuspensionLog::create([
+            'account_id' => $user->account_id,
+            'action' => 'suspend',
+            'type' => $validated['type'],
+            'reason' => $validated['reason'],
+            'performed_by' => auth()->id(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        // อัปเดตข้อมูลบัญชี
+        $user->update([
+            'suspended_at' => now(),
+            'suspension_type' => $validated['type'],
+            'suspension_start' => $validated['type'] === 'temporary' ? $validated['suspension_start'] : null,
+            'suspension_end' => $validated['type'] === 'temporary' ? $validated['suspension_end'] : null,
+            'suspension_reason' => $validated['reason'],
+            'suspended_by' => auth()->id(),
+            'status' => 'suspended',
+        ]);
+
+        // Kill All Sessions - เตะ User ออกจากระบบทุก Device
+        DB::table('sessions')->where('user_id', $user->account_id)->delete();
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'ระงับบัญชีเรียบร้อยแล้ว');
+    }
+
+    /**
+     * ยกเลิกการระงับบัญชี
+     */
+    public function unsuspend($id, Request $request)
+    {
+        $user = Account::findOrFail($id);
+
+        // บันทึก Log ก่อน
+        SuspensionLog::create([
+            'account_id' => $user->account_id,
+            'action' => 'unsuspend',
+            'type' => $user->suspension_type,
+            'reason' => 'ยกเลิกการระงับโดย Admin',
+            'performed_by' => auth()->id(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        // ล้างข้อมูลการระงับให้เกลี้ยง
+        $user->update([
+            'suspended_at' => null,
+            'suspension_type' => null,
+            'suspension_start' => null,
+            'suspension_end' => null,
+            'suspension_reason' => null,
+            'suspended_by' => null,
+            'status' => 'active',
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'ยกเลิกการระงับบัญชีเรียบร้อยแล้ว');
     }
 }

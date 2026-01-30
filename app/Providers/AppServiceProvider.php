@@ -21,8 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 2. เพิ่มโค้ดบังคับให้ทุกอย่างเป็น HTTPS เมื่อรันผ่าน Ngrok
-        if (config('app.env') !== 'local' || env('APP_URL') !== 'http://localhost') {
+        // Force HTTPS only for production domain, allow localhost for development
+        $host = request()->getHost();
+        $isLocalhost = in_array($host, ['localhost', '127.0.0.1']);
+        
+        if (!$isLocalhost && config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 

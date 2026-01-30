@@ -72,9 +72,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/history', [App\Http\Controllers\ReportController::class, 'history'])->name('history');
     });
 
-    Route::prefix('repair')->name('repair.')->group(function () {
-        // ... other repair routes if any ...
+    Route::prefix('repairs')->name('repairs.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\RepairController::class, 'dashboard'])->name('dashboard');
+        Route::get('/list', [\App\Http\Controllers\RepairController::class, 'index'])->name('index');
+        Route::get('/status', [\App\Http\Controllers\RepairController::class, 'showStatus'])->name('status');
+        Route::patch('/status', [\App\Http\Controllers\RepairController::class, 'updateStatus'])->name('status.update');
+        Route::post('/credit/{id}', [\App\Http\Controllers\RepairController::class, 'voteCredit'])->name('credit.vote');
         Route::get('/keywords', [\App\Http\Controllers\PersonalKeywordController::class, 'indexRepair'])->name('keywords');
+        
+        // Job routes
+        Route::get('/jobs/my', [\App\Http\Controllers\JobController::class, 'myJobs'])->name('jobs.my');
+        Route::get('/jobs/create', [\App\Http\Controllers\JobController::class, 'create'])->name('jobs.create');
+        Route::post('/jobs', [\App\Http\Controllers\JobController::class, 'store'])->name('jobs.store');
+        Route::get('/jobs', [\App\Http\Controllers\JobController::class, 'index'])->name('jobs.index');
+        Route::get('/jobs/{id}', [\App\Http\Controllers\JobController::class, 'show'])->name('jobs.show');
+        Route::post('/jobs/step/{id}', [\App\Http\Controllers\JobController::class, 'updateStep'])->name('jobs.step.update');
     });
 
     Route::get('/job', function () {
@@ -85,6 +97,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('complaints')->name('complaints.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\ComplaintController::class, 'dashboard'])->name('dashboard');
         Route::get('/list', [App\Http\Controllers\ComplaintController::class, 'index'])->name('index');
+        Route::get('/status', [App\Http\Controllers\ComplaintController::class, 'showStatus'])->name('status');
+        Route::patch('/status', [App\Http\Controllers\ComplaintController::class, 'updateStatus'])->name('status.update');
+        Route::post('/credit/{id}', [App\Http\Controllers\ComplaintController::class, 'voteCredit'])->name('credit.vote');
         Route::get('/keywords', [\App\Http\Controllers\PersonalKeywordController::class, 'indexComplaint'])->name('keywords');
     });
 
@@ -117,6 +132,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users/bulk', [AdminUserController::class, 'bulkStore'])->name('users.bulk');
         Route::post('/users/{id}/resend', [AdminUserController::class, 'resend'])->name('users.resend');
         Route::delete('/users/{id}/cancel', [AdminUserController::class, 'cancel'])->name('users.cancel');
+        
+        // Suspension Management
+        Route::get('/users/{id}/suspend', [AdminUserController::class, 'suspend'])->name('users.suspend');
+        Route::post('/users/{id}/suspend', [AdminUserController::class, 'storeSuspension'])->name('users.suspend.store');
+        Route::post('/users/{id}/unsuspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
 
     });
 
@@ -138,5 +158,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/invite/{token}', [InviteController::class, 'show'])->name('invite.show');
     Route::post('/invite/accept', [InviteController::class, 'accept'])->name('invite.accept');
 });
+
+// Public Legal Pages (no auth required)
+Route::get('/privacy-policy', function () {
+    return Inertia::render('Legal/PrivacyPolicy');
+})->name('privacy.policy');
 
 require __DIR__ . '/auth.php';

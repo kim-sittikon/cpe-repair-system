@@ -44,6 +44,13 @@ class Account extends Authenticatable
         'invited_by',
         'invitation_sent_at',
         'invitation_expires_at',
+        // Suspension fields
+        'suspended_at',
+        'suspension_type',
+        'suspension_start',
+        'suspension_end',
+        'suspension_reason',
+        'suspended_by',
     ];
 
     /**
@@ -83,6 +90,9 @@ class Account extends Authenticatable
             'credit' => 'integer',
             'invitation_sent_at' => 'datetime',
             'invitation_expires_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'suspension_start' => 'datetime',
+            'suspension_end' => 'datetime',
         ];
     }
 
@@ -129,5 +139,63 @@ class Account extends Authenticatable
     public function isPending()
     {
         return $this->status === 'pending';
+    }
+
+    /**
+     * Derived suspension status (permanent/temporary/null)
+     */
+    public function suspensionStatus(): ?string
+    {
+        if (!$this->suspended_at) return null;
+        if ($this->suspension_type === 'permanent') return 'permanent';
+        if ($this->suspension_type === 'temporary' && 
+            now()->between($this->suspension_start, $this->suspension_end)) {
+            return 'temporary';
+        }
+        return null;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspensionStatus() !== null;
+    }
+
+    /**
+     * Check if temporary suspension has expired and auto-unsuspend
+     */
+    public function checkAndUpdateSuspensionStatus(): void
+    {
+        // Only check for temporary suspensions that have expired
+        if ($this->status === 'suspended' && 
+            $this->suspension_type === 'temporary' && 
+            $this->suspension_end && 
+            now()->gt($this->suspension_end)) {
+            
+            // Auto-unsuspend: clear suspension fields and set status to active
+            $this->update([
+                'status' => 'active',
+                'suspended_at' => null,
+                'suspension_type' => null,
+                'suspension_start' => null,
+                'suspension_end' => null,
+                'suspension_reason' => null,
+                'suspended_by' => null,
+            ]);
+        }
+    }
+
+    public function scopeSuspended($query)
+    {
+        return $query->whereNotNull('suspended_at');
+    }
+
+    public function suspendedBy()
+    {
+        return $this->belongsTo(Account::class, 'suspended_by', 'account_id');
+    }
+
+    public function suspensionLogs()
+    {
+        return $this->hasMany(SuspensionLog::class, 'account_id', 'account_id');
     }
 }

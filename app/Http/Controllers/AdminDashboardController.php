@@ -57,13 +57,17 @@ class AdminDashboardController extends Controller
             ],
         ];
 
-        // 4. User Activity Chart - Empty data (backend removed)
+        // 4. User Activity Chart - Monthly registrations (6 months)
         $chartData_userActivity = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
+            $userCount = Account::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+            
             $chartData_userActivity[] = [
-                'month' => $date->locale('th')->format('M'),
-                'users' => 0, // No data - backend removed
+                'month' => $date->locale('th')->translatedFormat('M'),
+                'users' => $userCount,
             ];
         }
 
