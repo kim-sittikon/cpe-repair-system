@@ -117,6 +117,10 @@ class ReportController extends Controller
                 'room_id' => $room_id,
             ]);
             $message = 'Repair request submitted successfully.';
+            
+            // Notify repair staff about new request
+            $fcmService = app(\App\Services\FCMService::class);
+            $fcmService->notifyRepairStaff($requestModel);
         } else {
             $requestModel = \App\Models\RequestComplaint::create([
                 'title' => $request->title,
@@ -127,6 +131,10 @@ class ReportController extends Controller
                 // Complaints might not have specific building/room, or optional
             ]);
             $message = 'Complaint submitted successfully.';
+            
+            // Notify complaint staff about new request
+            $fcmService = app(\App\Services\FCMService::class);
+            $fcmService->notifyComplaintStaff($requestModel);
         }
 
         // --- KEYWORD DETECTION (ASYNC QUEUE) ---

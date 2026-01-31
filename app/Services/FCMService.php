@@ -190,4 +190,73 @@ class FCMService
             ]
         );
     }
+
+    /**
+     * Send notification to all repair staff when new repair is created
+     */
+    public function notifyRepairStaff($repair): array
+    {
+        // Get all users with job_repair = true and have FCM token
+        $repairStaff = \App\Models\Account::where('job_repair', true)
+            ->whereNotNull('fcm_token')
+            ->get();
+
+        if ($repairStaff->isEmpty()) {
+            \Log::info('No repair staff with FCM tokens found');
+            return ['success' => 0, 'failure' => 0, 'total_staff' => 0];
+        }
+
+        $tokens = $repairStaff->pluck('fcm_token')->toArray();
+        $repairCode = 'RP' . str_pad($repair->repair_id, 4, '0', STR_PAD_LEFT);
+        
+        $title = '🔧 แจ้งซ่อมใหม่';
+        $body = "#{$repairCode}: " . mb_substr($repair->title, 0, 50);
+        
+        $result = $this->sendToMultiple($tokens, $title, $body, [
+            'type' => 'new_repair',
+            'repair_id' => (string) $repair->repair_id,
+            'url' => "/repairs/list"
+        ]);
+
+        $result['total_staff'] = count($repairStaff);
+        
+        \Log::info('Notified repair staff', $result);
+        
+        return $result;
+    }
+
+    /**
+     * Send notification to all complaint staff when new complaint is created
+     */
+    public function notifyComplaintStaff($complaint): array
+    {
+        // Get all users with job_complaint = true and have FCM token
+        $complaintStaff = \App\Models\Account::where('job_complaint', true)
+            ->whereNotNull('fcm_token')
+            ->get();
+
+        if ($complaintStaff->isEmpty()) {
+            \Log::info('No complaint staff with FCM tokens found');
+            return ['success' => 0, 'failure' => 0, 'total_staff' => 0];
+        }
+
+        $tokens = $complaintStaff->pluck('fcm_token')->toArray();
+        $complaintCode = 'CM' . str_pad($complaint->complaint_id, 4, '0', STR_PAD_LEFT);
+        
+        $title = '📋 ร้องเรียนใหม่';
+        $body = "#{$complaintCode}: " . mb_substr($complaint->title, 0, 50);
+        
+        $result = $this->sendToMultiple($tokens, $title, $body, [
+            'type' => 'new_complaint',
+            'complaint_id' => (string) $complaint->complaint_id,
+            'url' => "/complaints/list"
+        ]);
+
+        $result['total_staff'] = count($complaintStaff);
+        
+        \Log::info('Notified complaint staff', $result);
+        
+        return $result;
+    }
 }
+

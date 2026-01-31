@@ -13,6 +13,13 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'icons/**/*'],
+            // Fix scope issue
+            outDir: 'public',
+            srcDir: 'public',
+            filename: 'sw.js',
+            injectRegister: null,
+            scope: '/',
+            base: '/',
             manifest: {
                 name: 'ระบบแจ้งปัญหา CPE',
                 short_name: 'CPE Repair',

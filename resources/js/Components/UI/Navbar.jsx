@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import Dropdown from '@/Components/UI/Dropdown';
+import NotificationToggle from '@/Components/NotificationToggle';
 
 export default function Navbar() {
     // ALL HOOKS MUST BE AT THE TOP (React Rules of Hooks)
@@ -262,6 +263,12 @@ export default function Navbar() {
                                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Signed in as</p>
                                         <p className="text-sm font-bold text-gray-800 truncate">{user.email}</p>
                                     </div>
+
+                                    {/* Notification Toggle for Desktop */}
+                                    <div className="px-2 py-2 border-b border-gray-100">
+                                        <NotificationToggle compact />
+                                    </div>
+
                                     <Dropdown.Link href={route('profile.edit')}>
                                         <span className="flex items-center gap-2">
                                             <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -451,6 +458,9 @@ export default function Navbar() {
 
                     {/* Bottom Action Buttons */}
                     <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-gray-50 p-4 space-y-2">
+                        {/* Notification Toggle */}
+                        <NotificationToggle />
+
                         <Link
                             href={route('profile.edit')}
                             onClick={closeMenu}

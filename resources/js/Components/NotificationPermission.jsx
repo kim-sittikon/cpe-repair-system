@@ -49,10 +49,14 @@ export default function NotificationPermission({ showInSettings = false, compact
                 // Send token to backend
                 await axios.post('/fcm/token', { token });
                 setStatus('granted');
+                // Notify other components (like NotificationToggle)
+                window.dispatchEvent(new CustomEvent('notificationStatusChanged'));
             } else {
                 // Permission was denied or failed
                 const newStatus = getNotificationStatus();
                 setStatus(newStatus.permission);
+                // Notify other components
+                window.dispatchEvent(new CustomEvent('notificationStatusChanged'));
 
                 if (newStatus.isDenied) {
                     setError('กรุณาเปิด permission ใน browser settings');
