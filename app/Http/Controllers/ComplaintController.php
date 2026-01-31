@@ -306,8 +306,27 @@ class ComplaintController extends Controller
             'status' => 'required|in:processing,finished',
         ]);
 
+        // Get complaints before update to send notifications
+        $complaints = \App\Models\RequestComplaint::whereIn('complaint_id', $validated['ids'])
+            ->with('account')
+            ->get();
+
         $updated = \App\Models\RequestComplaint::whereIn('complaint_id', $validated['ids'])
             ->update(['status' => $validated['status']]);
+
+        // Send push notifications to reporters
+        $fcm = new \App\Services\FCMService();
+        $statusText = $this->mapStatus($validated['status']);
+        
+        foreach ($complaints as $complaint) {
+            if ($complaint->account && $complaint->account->fcm_token) {
+                $fcm->notifyComplaintStatusChanged(
+                    $complaint->account,
+                    $complaint,
+                    $statusText
+                );
+            }
+        }
 
         return redirect()->route('complaints.index')
             ->with('success', "อัปเดตสถานะเรียบร้อย {$updated} รายการ");

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use App\Models\JobStep;
+use App\Models\FileJob;
 use App\Models\RequestJobMap;
 use App\Models\RequestRepair;
 use App\Models\Account;
@@ -86,6 +87,9 @@ class JobController extends Controller
             'steps.*.action' => 'required|in:act,app',
             'steps.*.assigned_account_id' => 'nullable|exists:accounts,account_id',
             'steps.*.step_details' => 'nullable|string',
+            'steps.*.due_date' => 'nullable|date',
+            'steps.*.attached_file_ids' => 'nullable|array',
+            'steps.*.attached_file_ids.*' => 'exists:file_repair,file_id',
         ]);
 
         DB::beginTransaction();
@@ -111,7 +115,7 @@ class JobController extends Controller
 
             // Create job steps
             foreach ($validated['steps'] as $index => $stepData) {
-                JobStep::create([
+                $step = JobStep::create([
                     'job_id' => $job->job_id,
                     'step_name' => $stepData['step_name'],
                     'step_number' => $index + 1,
@@ -119,7 +123,18 @@ class JobController extends Controller
                     'status' => 'pending',
                     'step_details' => $stepData['step_details'] ?? null,
                     'assigned_account_id' => $stepData['assigned_account_id'] ?? null,
+                    'due_date' => !empty($stepData['due_date']) ? $stepData['due_date'] : null,
                 ]);
+
+                // Attach repair files to step
+                if (!empty($stepData['attached_file_ids'])) {
+                    foreach ($stepData['attached_file_ids'] as $fileId) {
+                        FileJob::create([
+                            'jobstep_id' => $step->jobstep_id,
+                            'repair_file_id' => $fileId,
+                        ]);
+                    }
+                }
             }
 
             DB::commit();

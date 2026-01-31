@@ -3,13 +3,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { Camera, Save, ArrowLeft, Info, LayoutTemplate, Eye, AlertCircle, CheckCircle2, PanelRightClose, PanelRightOpen, Image as ImageIcon, X, Trash2, AlertTriangle } from 'lucide-react';
 
-export default function Create({ auth, latestAnnouncements }) {
+export default function Create({ auth, latestAnnouncements, buildings = [] }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         title: '',
         detail: '',
         is_urgent: false,
         image: null,
+        building_id: '',
+        room_id: '',
     });
+
+    // Get filtered rooms based on selected building
+    const availableRooms = buildings.find(b => b.id == data.building_id)?.rooms || [];
 
     const [activeTab, setActiveTab] = useState('create'); // 'create' or 'manage'
     const [preview, setPreview] = useState(null);
@@ -290,7 +295,7 @@ export default function Create({ auth, latestAnnouncements }) {
                                                 {/* Post Type */}
                                                 <div className="space-y-3 pt-2">
                                                     <label className="block text-sm font-semibold text-gray-700">ประเภทการประกาศ</label>
-                                                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                                    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
                                                         <div className="flex bg-gray-100 p-1.5 rounded-xl w-full sm:w-fit gap-1 shadow-inner">
                                                             <button
                                                                 type="button"
@@ -308,6 +313,51 @@ export default function Create({ auth, latestAnnouncements }) {
                                                                 <AlertCircle className={`w-4 h-4 ${data.is_urgent ? 'text-red-500' : 'text-transparent'}`} />
                                                                 เรื่องเร่งด่วน
                                                             </button>
+                                                        </div>
+
+                                                        {/* Location Selectors */}
+                                                        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                                                            <div className="relative">
+                                                                <select
+                                                                    value={data.building_id}
+                                                                    onChange={(e) => {
+                                                                        setData(prev => ({ ...prev, building_id: e.target.value, room_id: '' }));
+                                                                    }}
+                                                                    className="w-full sm:w-44 px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all appearance-none cursor-pointer pr-8"
+                                                                >
+                                                                    <option value="">ทุกอาคาร</option>
+                                                                    {buildings.map((building) => (
+                                                                        <option key={building.id} value={building.id}>
+                                                                            {building.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative">
+                                                                <select
+                                                                    value={data.room_id}
+                                                                    onChange={(e) => setData('room_id', e.target.value)}
+                                                                    disabled={!data.building_id}
+                                                                    className="w-full sm:w-44 px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all appearance-none cursor-pointer pr-8 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                                                                >
+                                                                    <option value="">ทุกห้อง</option>
+                                                                    {availableRooms.map((room) => (
+                                                                        <option key={room.id} value={room.id}>
+                                                                            {room.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

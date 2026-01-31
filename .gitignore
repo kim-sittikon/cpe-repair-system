@@ -22,3 +22,9 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Firebase & Sensitive Credentials - NEVER COMMIT!
+firebase-credentials.json
+*-credentials.json
+*.credentials.json
+/storage/app/*.json

@@ -15,9 +15,14 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
         name: '',
         repair_ids: selectedIds.map(Number),
         steps: [
-            { step_name: '', action: 'act', assigned_account_id: '', step_details: '' }
+            { step_name: '', action: 'act', assigned_account_id: '', step_details: '', due_date: '', attached_file_ids: [] }
         ],
     });
+
+    // Get all available images from selected repairs
+    const availableImages = repairs
+        .filter(r => selectedRepairs.includes(r.id))
+        .flatMap(r => (r.files || []).filter(f => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(f.extension)).map(f => ({ ...f, repairId: r.id, repairNumericId: r.numeric_id })));
 
     // Toggle repair selection
     const toggleRepair = (id) => {
@@ -46,7 +51,7 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
     const addStep = () => {
         setData('steps', [
             ...data.steps,
-            { step_name: '', action: 'act', assigned_account_id: '', step_details: '' }
+            { step_name: '', action: 'act', assigned_account_id: '', step_details: '', due_date: '', attached_file_ids: [] }
         ]);
     };
 
@@ -61,6 +66,18 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
     const updateStep = (index, field, value) => {
         const newSteps = [...data.steps];
         newSteps[index][field] = value;
+        setData('steps', newSteps);
+    };
+
+    // Toggle file attachment for a step
+    const toggleFileAttachment = (stepIndex, fileId) => {
+        const newSteps = [...data.steps];
+        const currentFiles = newSteps[stepIndex].attached_file_ids || [];
+        if (currentFiles.includes(fileId)) {
+            newSteps[stepIndex].attached_file_ids = currentFiles.filter(id => id !== fileId);
+        } else {
+            newSteps[stepIndex].attached_file_ids = [...currentFiles, fileId];
+        }
         setData('steps', newSteps);
     };
 
@@ -147,6 +164,7 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">เลือก</th>
                                                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">เลขที่แจ้ง</th>
                                                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">หัวข้อคำร้อง</th>
+                                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-16">รูป</th>
                                                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">ตำแหน่ง</th>
                                                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">ผู้แจ้ง</th>
                                                     </tr>
@@ -195,6 +213,25 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                                         คลิกเพื่อดูรายละเอียด
                                                                     </span>
                                                                 </button>
+                                                            </td>
+                                                            <td className="px-4 py-4 text-center" onClick={() => toggleRepair(repair.id)}>
+                                                                {repair.files && repair.files.length > 0 ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            openRepairDetail(repair);
+                                                                        }}
+                                                                        className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-200 transition-all"
+                                                                    >
+                                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                        </svg>
+                                                                        {repair.files.length}
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-gray-300 text-xs">-</span>
+                                                                )}
                                                             </td>
                                                             <td className="px-4 py-4 hidden md:table-cell" onClick={() => toggleRepair(repair.id)}>
                                                                 <div className="flex items-center gap-1.5">
@@ -325,8 +362,8 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                         />
                                                     </div>
 
-                                                    {/* Type & Assignee Row */}
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {/* Type, Assignee & Due Date Row */}
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                         {/* Action Type */}
                                                         <div>
                                                             <label className="block text-xs font-medium text-gray-600 mb-1.5">ประเภท</label>
@@ -357,6 +394,24 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                                 ))}
                                                             </select>
                                                         </div>
+
+                                                        {/* Due Date */}
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                                                                <span className="flex items-center gap-1">
+                                                                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                    กำหนดเสร็จ
+                                                                </span>
+                                                            </label>
+                                                            <input
+                                                                type="date"
+                                                                value={step.due_date}
+                                                                onChange={(e) => updateStep(index, 'due_date', e.target.value)}
+                                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all cursor-pointer"
+                                                            />
+                                                        </div>
                                                     </div>
 
                                                     {/* Step Details */}
@@ -370,6 +425,62 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none"
                                                         />
                                                     </div>
+
+                                                    {/* Image Attachment Section */}
+                                                    {availableImages.length > 0 && (
+                                                        <div className="border-t border-gray-100 pt-4">
+                                                            <label className="block text-xs font-medium text-gray-600 mb-2">
+                                                                <span className="flex items-center gap-1.5">
+                                                                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                    เลือกรูปแนบสำหรับขั้นตอนนี้
+                                                                    {(step.attached_file_ids?.length || 0) > 0 && (
+                                                                        <span className="ml-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold">
+                                                                            {step.attached_file_ids.length} รูป
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            </label>
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {availableImages.map((img) => {
+                                                                    const isSelected = (step.attached_file_ids || []).includes(img.id);
+                                                                    return (
+                                                                        <button
+                                                                            key={img.id}
+                                                                            type="button"
+                                                                            onClick={() => toggleFileAttachment(index, img.id)}
+                                                                            className={`relative group overflow-hidden rounded-lg border-2 transition-all ${isSelected
+                                                                                    ? 'border-orange-500 ring-2 ring-orange-200 shadow-lg'
+                                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                                                }`}
+                                                                        >
+                                                                            <img
+                                                                                src={img.url}
+                                                                                alt={img.name}
+                                                                                className="w-16 h-16 object-cover"
+                                                                            />
+                                                                            {/* Overlay with source info */}
+                                                                            <div className={`absolute inset-0 flex items-center justify-center transition-all ${isSelected
+                                                                                    ? 'bg-orange-500/30'
+                                                                                    : 'bg-black/0 group-hover:bg-black/10'
+                                                                                }`}>
+                                                                                {isSelected && (
+                                                                                    <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                                                    </svg>
+                                                                                )}
+                                                                            </div>
+                                                                            {/* Repair ID badge */}
+                                                                            <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] py-0.5 text-center truncate">
+                                                                                {img.repairNumericId}
+                                                                            </span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

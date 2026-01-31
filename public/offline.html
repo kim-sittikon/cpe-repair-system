@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f97316">
+    <title>ไม่มีการเชื่อมต่อ - CPE Repair</title>
+    <link rel="icon" href="/icons/ios/32.png" type="image/png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .icon-wrapper {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 32px;
+            background: white;
+            border-radius: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(249, 115, 22, 0.15);
+        }
+        
+        .wifi-icon {
+            width: 64px;
+            height: 64px;
+            color: #f97316;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        
+        p {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .tips {
+            margin-top: 48px;
+            padding: 20px;
+            background: white;
+            border-radius: 16px;
+            text-align: left;
+        }
+        
+        .tips h3 {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tips ul {
+            list-style: none;
+        }
+        
+        .tips li {
+            font-size: 14px;
+            color: #4b5563;
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        
+        .tips li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #f97316;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon-wrapper">
+            <svg class="wifi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path>
+            </svg>
+        </div>
+        
+        <h1>ไม่มีการเชื่อมต่ออินเทอร์เน็ต</h1>
+        <p>กรุณาตรวจสอบการเชื่อมต่อเครือข่ายของคุณแล้วลองอีกครั้ง</p>
+        
+        <button class="btn" onclick="window.location.reload()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            ลองอีกครั้ง
+        </button>
+        
+        <div class="tips">
+            <h3>ลองทำตามนี้</h3>
+            <ul>
+                <li>ตรวจสอบการเชื่อมต่อ Wi-Fi หรือข้อมูลมือถือ</li>
+                <li>ปิด-เปิดโหมดเครื่องบิน</li>
+                <li>รีสตาร์ท Router หรือ Modem</li>
+                <li>ย้ายไปใกล้ Router มากขึ้น</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

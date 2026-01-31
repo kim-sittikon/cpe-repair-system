@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 
 export default function LandingPage({ urgentNews, generalNews }) {
     // --- Carousel Logic ---
@@ -199,6 +199,16 @@ export default function LandingPage({ urgentNews, generalNews }) {
                                                 {item.desc}
                                             </p>
 
+                                            {/* Location Badge */}
+                                            {(item.building_name || item.room_name) && (
+                                                <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-lg w-fit">
+                                                    <MapPin className="w-3 h-3" />
+                                                    <span className="font-medium truncate max-w-[180px]">
+                                                        {item.building_name}{item.room_name && ` / ${item.room_name}`}
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                                                 <span className="text-xs text-gray-400 font-light flex items-center gap-1.5">
                                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -283,6 +293,15 @@ export default function LandingPage({ urgentNews, generalNews }) {
                                     <p className="text-sm text-gray-500 line-clamp-2 font-light leading-relaxed">
                                         {item.desc}
                                     </p>
+                                    {/* Location Badge */}
+                                    {(item.building_name || item.room_name) && (
+                                        <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-lg w-fit">
+                                            <MapPin className="w-3 h-3" />
+                                            <span className="font-medium truncate max-w-[200px]">
+                                                {item.building_name}{item.room_name && ` / ${item.room_name}`}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Arrow - Desktop only */}

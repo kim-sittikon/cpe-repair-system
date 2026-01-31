@@ -322,21 +322,81 @@ export default function ManageUser({ user, activeTab: initialTab = 'edit' }) {
 
                                     {/* Already Suspended Warning */}
                                     {isSuspended && (
-                                        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 flex items-start gap-3">
-                                            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="text-yellow-800 font-medium">บัญชีนี้ถูกระงับอยู่แล้ว</p>
-                                                <p className="text-yellow-700 text-sm mt-1">
-                                                    ประเภท: {user.suspension_type === 'permanent' ? 'ถาวร' : 'ชั่วคราว'}
-                                                    {user.suspension_end && ` (ถึง ${new Date(user.suspension_end).toLocaleDateString('th-TH')})`}
-                                                </p>
-                                                <button
-                                                    onClick={() => router.post(route('admin.users.unsuspend', user.account_id))}
-                                                    className="mt-3 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
-                                                >
-                                                    ยกเลิกการระงับ
-                                                </button>
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5">
+                                            <div className="flex items-start gap-3">
+                                                <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                                <div className="flex-1">
+                                                    <p className="text-yellow-800 font-medium">บัญชีนี้ถูกระงับอยู่แล้ว</p>
+                                                    <p className="text-yellow-700 text-sm mt-1">
+                                                        ประเภท: {user.suspension_type === 'permanent' ? 'ถาวร' : 'ชั่วคราว'}
+                                                    </p>
+                                                </div>
                                             </div>
+
+                                            {/* Detailed suspension info */}
+                                            {user.suspension_type === 'temporary' && (
+                                                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-yellow-100/50 rounded-xl p-4">
+                                                    <div>
+                                                        <p className="text-xs text-yellow-700 font-medium mb-1">วันที่เริ่มระงับ</p>
+                                                        <p className="text-sm text-yellow-900">
+                                                            {user.suspension_start
+                                                                ? new Date(user.suspension_start).toLocaleDateString('th-TH', {
+                                                                    year: 'numeric',
+                                                                    month: 'long',
+                                                                    day: 'numeric',
+                                                                })
+                                                                : '-'
+                                                            }
+                                                        </p>
+                                                        <p className="text-sm text-yellow-800">
+                                                            {user.suspension_start
+                                                                ? new Date(user.suspension_start).toLocaleTimeString('th-TH', {
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
+                                                                }) + ' น.'
+                                                                : ''
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-yellow-700 font-medium mb-1">วันที่สิ้นสุดระงับ</p>
+                                                        <p className="text-sm text-yellow-900">
+                                                            {user.suspension_end
+                                                                ? new Date(user.suspension_end).toLocaleDateString('th-TH', {
+                                                                    year: 'numeric',
+                                                                    month: 'long',
+                                                                    day: 'numeric',
+                                                                })
+                                                                : '-'
+                                                            }
+                                                        </p>
+                                                        <p className="text-sm text-yellow-800">
+                                                            {user.suspension_end
+                                                                ? new Date(user.suspension_end).toLocaleTimeString('th-TH', {
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
+                                                                }) + ' น.'
+                                                                : ''
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Show reason if exists */}
+                                            {user.suspension_reason && (
+                                                <div className="mt-3 bg-yellow-100/50 rounded-xl p-4">
+                                                    <p className="text-xs text-yellow-700 font-medium mb-1">เหตุผลในการระงับ</p>
+                                                    <p className="text-sm text-yellow-900">{user.suspension_reason}</p>
+                                                </div>
+                                            )}
+
+                                            <button
+                                                onClick={() => router.post(route('admin.users.unsuspend', user.account_id))}
+                                                className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
+                                            >
+                                                ยกเลิกการระงับ
+                                            </button>
                                         </div>
                                     )}
 

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Camera, MapPin, AlertCircle, FileText, Send } from 'lucide-react';
+import CameraCapture from '@/Components/CameraCapture';
+import GeolocationDisplay from '@/Components/GeolocationDisplay';
 
 export default function Create({ auth, buildings = [] }) {
     // The original code had `const { auth } = usePage().props;` here.
@@ -13,15 +15,19 @@ export default function Create({ auth, buildings = [] }) {
         location_id: '', // building
         room: '',
         images: [],
+        latitude: null,
+        longitude: null,
     });
 
     const [imagePreview, setImagePreview] = useState([]);
     const [imageError, setImageError] = useState('');
     const [localErrors, setLocalErrors] = useState({});
+    const [showCamera, setShowCamera] = useState(false);
 
     // Logic to find the selected building and its rooms
     const selectedBuilding = buildings.find(b => String(b.building_id) === String(data.location_id));
     const availableRooms = selectedBuilding ? selectedBuilding.rooms : [];
+
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
@@ -40,6 +46,40 @@ export default function Create({ auth, buildings = [] }) {
         const newPreviews = files.map(file => URL.createObjectURL(file));
         setImagePreview([...imagePreview, ...newPreviews]);
     };
+
+    // Handle camera capture
+    const handleCameraCapture = useCallback((file) => {
+        const totalImages = data.images.length + 1;
+
+        if (totalImages > 5) {
+            setImageError('สามารถอัปโหลดได้สูงสุด 5 รูป');
+            setTimeout(() => setImageError(''), 3000);
+            setShowCamera(false);
+            return;
+        }
+
+        setImageError('');
+        setData('images', [...data.images, file]);
+        setImagePreview([...imagePreview, URL.createObjectURL(file)]);
+        setShowCamera(false);
+    }, [data.images, imagePreview, setData]);
+
+    // Handle geolocation change
+    const handleLocationChange = useCallback((location) => {
+        if (location) {
+            setData(currentData => ({
+                ...currentData,
+                latitude: location.latitude,
+                longitude: location.longitude,
+            }));
+        } else {
+            setData(currentData => ({
+                ...currentData,
+                latitude: null,
+                longitude: null,
+            }));
+        }
+    }, [setData]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -210,6 +250,17 @@ export default function Create({ auth, buildings = [] }) {
                             <label className="text-xl font-medium text-gray-800">แนบรูปภาพ</label>
 
                             <div className="flex flex-wrap items-center gap-3">
+                                {/* Camera button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCamera(true)}
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-100 hover:bg-orange-200 border border-orange-300 rounded-lg transition-colors"
+                                >
+                                    <Camera className="w-5 h-5 text-orange-600" />
+                                    <span className="text-sm font-medium text-orange-700">ถ่ายรูป</span>
+                                </button>
+
+                                {/* File picker */}
                                 <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-lg cursor-pointer transition-colors">
                                     <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -260,6 +311,16 @@ export default function Create({ auth, buildings = [] }) {
                             )}
                         </div>
 
+                        {/* Geolocation - Show only for repair type */}
+                        {data.type === 'repair' && (
+                            <div className="space-y-3">
+                                <GeolocationDisplay
+                                    onLocationChange={handleLocationChange}
+                                    autoFetch={false}
+                                />
+                            </div>
+                        )}
+
                         {/* Submit Buttons */}
                         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-6">
                             <button
@@ -299,6 +360,14 @@ export default function Create({ auth, buildings = [] }) {
                     </form>
                 </div>
             </div>
+
+            {/* Camera Modal */}
+            {showCamera && (
+                <CameraCapture
+                    onCapture={handleCameraCapture}
+                    onClose={() => setShowCamera(false)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

@@ -1,7 +1,31 @@
+import { useEffect } from 'react';
 import Navbar from '@/Components/UI/Navbar';
 import BottomNavbar from '@/Components/UI/BottomNavbar';
+import InstallPWA from '@/Components/InstallPWA';
+import NotificationPermission from '@/Components/NotificationPermission';
+import { updateBadge, clearBadge } from '@/services/badging';
 
 export default function Authenticated({ user, header, children }) {
+    // Update app badge when component mounts
+    useEffect(() => {
+        // Update badge count for staff users
+        if (user?.job_repair || user?.job_complaint || user?.role === 'admin') {
+            updateBadge();
+        } else {
+            // Clear badge for regular users
+            clearBadge();
+        }
+
+        // Refresh badge periodically (every 5 minutes)
+        const interval = setInterval(() => {
+            if (user?.job_repair || user?.job_complaint || user?.role === 'admin') {
+                updateBadge();
+            }
+        }, 5 * 60 * 1000);
+
+        return () => clearInterval(interval);
+    }, [user]);
+
     return (
         <div className="min-h-screen flex flex-col">
             {/* Navbar Only (No Sidebar) */}
@@ -28,6 +52,12 @@ export default function Authenticated({ user, header, children }) {
 
             {/* Bottom Navigation for Mobile */}
             <BottomNavbar />
+
+            {/* PWA Install Prompt */}
+            <InstallPWA />
+
+            {/* Push Notification Permission Prompt */}
+            <NotificationPermission />
         </div>
     );
 }

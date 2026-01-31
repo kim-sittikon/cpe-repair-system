@@ -51,6 +51,9 @@ class Account extends Authenticatable
         'suspension_end',
         'suspension_reason',
         'suspended_by',
+        // FCM Push Notification fields
+        'fcm_token',
+        'fcm_token_updated_at',
     ];
 
     /**
@@ -93,6 +96,7 @@ class Account extends Authenticatable
             'suspended_at' => 'datetime',
             'suspension_start' => 'datetime',
             'suspension_end' => 'datetime',
+            'fcm_token_updated_at' => 'datetime',
         ];
     }
 

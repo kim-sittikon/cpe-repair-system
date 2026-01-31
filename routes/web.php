@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\FCMController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -155,6 +156,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/keywords/personal/{id}', [\App\Http\Controllers\PersonalKeywordController::class, 'update'])->name('update');
         Route::delete('/keywords/personal/{id}', [\App\Http\Controllers\PersonalKeywordController::class, 'destroy'])->name('destroy');
     });
+
+    // FCM Push Notification Routes
+    Route::prefix('fcm')->name('fcm.')->group(function () {
+        Route::post('/token', [FCMController::class, 'storeToken'])->name('token.store');
+        Route::delete('/token', [FCMController::class, 'removeToken'])->name('token.remove');
+        Route::get('/status', [FCMController::class, 'getStatus'])->name('status');
+        Route::post('/test', [FCMController::class, 'sendTest'])->name('test');
+    });
+
+    // Badge count for PWA Badging API
+    Route::get('/api/pending-count', function () {
+        $user = auth()->user();
+        if (!$user) return response()->json(['count' => 0]);
+        
+        $count = 0;
+        
+        // Count pending items based on user role
+        if ($user->job_repair) {
+            $count += \App\Models\RequestRepair::where('status', 'pending')->count();
+        }
+        if ($user->job_complaint) {
+            $count += \App\Models\RequestComplaint::where('status', 'pending')->count();
+        }
+        
+        return response()->json(['count' => $count]);
+    })->name('pending.count');
 });
 
 // Guest Routes (Invitation Acceptance)

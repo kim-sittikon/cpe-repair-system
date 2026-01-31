@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // 1. Fetch Urgent News (Limit 7)
-        $urgentNews = Announcement::with('account:account_id,first_name,last_name')
+        $urgentNews = Announcement::with(['account:account_id,first_name,last_name', 'building', 'room'])
             ->where('is_urgent', true)
             ->latest()
             ->take(7)
@@ -27,12 +27,14 @@ class DashboardController extends Controller
                     'desc' => $item->detail,
                     'img' => $item->file ? '/storage/' . $item->file : null, // Ensure /storage/ prefix
                     'date' => $item->created_at->locale('th')->isoFormat('D MMM YYYY'),
-                    'is_urgent' => true
+                    'is_urgent' => true,
+                    'building_name' => $item->building?->building_name,
+                    'room_name' => $item->room?->room_name,
                 ];
             });
 
         // 2. Fetch General News (Paginated 4)
-        $generalNews = Announcement::with('account:account_id,first_name,last_name')
+        $generalNews = Announcement::with(['account:account_id,first_name,last_name', 'building', 'room'])
             ->where('is_urgent', false)
             ->latest()
             ->paginate(4)
@@ -43,7 +45,9 @@ class DashboardController extends Controller
                     'desc' => $item->detail,
                     'img' => $item->file ? '/storage/' . $item->file : null,
                     'date' => $item->created_at->locale('th')->isoFormat('D MMM YYYY'),
-                    'is_urgent' => false
+                    'is_urgent' => false,
+                    'building_name' => $item->building?->building_name,
+                    'room_name' => $item->room?->room_name,
                 ];
             });
 

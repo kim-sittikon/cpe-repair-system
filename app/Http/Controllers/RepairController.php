@@ -267,8 +267,27 @@ class RepairController extends Controller
             'status' => 'required|in:processing,finished',
         ]);
 
+        // Get repairs before update to send notifications
+        $repairs = RequestRepair::whereIn('repair_id', $validated['ids'])
+            ->with('account')
+            ->get();
+
         $updated = RequestRepair::whereIn('repair_id', $validated['ids'])
             ->update(['status' => $validated['status']]);
+
+        // Send push notifications to reporters
+        $fcm = new \App\Services\FCMService();
+        $statusText = $this->mapStatus($validated['status']);
+        
+        foreach ($repairs as $repair) {
+            if ($repair->account && $repair->account->fcm_token) {
+                $fcm->notifyRepairStatusChanged(
+                    $repair->account,
+                    $repair,
+                    $statusText
+                );
+            }
+        }
 
         return redirect()->route('repairs.index')
             ->with('success', "อัปเดตสถานะเรียบร้อย {$updated} รายการ");

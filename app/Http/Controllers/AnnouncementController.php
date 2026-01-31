@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\Building;
 use App\Traits\ImageUploadTrait;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -67,8 +68,23 @@ class AnnouncementController extends Controller
                 ];
             });
 
+        // Get buildings with their rooms for location selector
+        $buildings = Building::with('rooms')->get()->map(function ($building) {
+            return [
+                'id' => $building->building_id,
+                'name' => $building->building_name,
+                'rooms' => $building->rooms->map(function ($room) {
+                    return [
+                        'id' => $room->room_id,
+                        'name' => $room->room_name,
+                    ];
+                }),
+            ];
+        });
+
         return Inertia::render('Announcement/Create', [
-            'latestAnnouncements' => $latestAnnouncements
+            'latestAnnouncements' => $latestAnnouncements,
+            'buildings' => $buildings,
         ]);
     }
 
@@ -81,7 +97,9 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'detail' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB Max (Backend Validation)
-            'is_urgent' => 'boolean'
+            'is_urgent' => 'boolean',
+            'building_id' => 'nullable|exists:building,building_id',
+            'room_id' => 'nullable|exists:room,room_id',
         ]);
 
         $user = auth()->user();
@@ -114,8 +132,8 @@ class AnnouncementController extends Controller
             'is_urgent' => $isUrgent,
             'file' => $imagePath, // Use 'file' column as per schema
             'account_id' => $user->account_id,
-            // 'building_id' => ... (Optional, can add if needed)
-            // 'room_id' => ... (Optional)
+            'building_id' => $request->building_id,
+            'room_id' => $request->room_id,
         ]);
 
         return redirect()->back()->with('success', 'ประกาศข่าวเรียบร้อยแล้ว');

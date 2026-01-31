@@ -21,11 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS only for production domain, allow localhost for development
-        $host = request()->getHost();
-        $isLocalhost = in_array($host, ['localhost', '127.0.0.1']);
-        
-        if (!$isLocalhost && config('app.env') === 'production') {
+        // Force HTTPS in production (required for Cloudflare Tunnel)
+        if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 

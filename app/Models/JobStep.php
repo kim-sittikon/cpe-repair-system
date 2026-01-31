@@ -15,6 +15,7 @@ class JobStep extends Model
         'status',
         'step_details',
         'completeDT',
+        'due_date',
         'assigned_account_id',
         'job_id'
     ];
