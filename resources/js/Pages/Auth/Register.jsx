@@ -417,7 +417,7 @@ export default function Register() {
             {/* Blurred Background Image */}
             <div className="absolute inset-0 z-0">
                 <img
-                    src="/images/register-side-bg.jpg"
+                    src="/images/register-side-bg.webp"
                     alt="Background"
                     className="w-full h-full object-cover filter blur-[8px] scale-110"
                 />

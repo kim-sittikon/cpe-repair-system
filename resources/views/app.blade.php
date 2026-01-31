@@ -6,8 +6,25 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- SEO Meta Tags -->
+        <meta name="description" content="ระบบรับแจ้งปัญหาและร้องเรียน ภาควิชาวิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยเทคโนโลยีราชมงคลธัญบุรี - แจ้งซ่อมอุปกรณ์ ติดตามสถานะ และร้องเรียนปัญหาได้ง่ายผ่านระบบออนไลน์">
+        <meta name="keywords" content="แจ้งซ่อม, ร้องเรียน, CPE, RMUTT, ระบบรับแจ้งปัญหา">
+        <meta name="author" content="ภาควิชาวิศวกรรมคอมพิวเตอร์ มทร.ธัญบุรี">
+        <link rel="canonical" href="https://cperepair.app{{ request()->getPathInfo() }}">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://cperepair.app">
+        <meta property="og:title" content="ระบบแจ้งปัญหา CPE - RMUTT">
+        <meta property="og:description" content="ระบบรับแจ้งปัญหาและร้องเรียน ภาควิชาวิศวกรรมคอมพิวเตอร์">
+        <meta property="og:image" content="https://cperepair.app/icons/android/android-launchericon-512-512.png">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="ระบบแจ้งปัญหา CPE - RMUTT">
+        <meta name="twitter:description" content="ระบบรับแจ้งปัญหาและร้องเรียน ภาควิชาวิศวกรรมคอมพิวเตอร์">
         <!-- PWA Manifest -->
-        <link rel="manifest" href="/build/manifest.webmanifest">
+        <link rel="manifest" href="/manifest.webmanifest">
 
         <!-- PWA Meta Tags -->
         <meta name="theme-color" content="#f97316">
@@ -36,9 +53,14 @@
         <meta name="msapplication-TileColor" content="#f97316">
         <meta name="msapplication-TileImage" content="/icons/windows11/Square150x150Logo.scale-200.png">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
+        <!-- Fonts - Optimized with crossorigin -->
+        <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+        <link rel="dns-prefetch" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        
+        <!-- Preload Critical Images (LCP Optimization) -->
+        <link rel="preload" as="image" href="/images/landing-bg-final.webp" fetchpriority="high">
+        <link rel="preload" as="image" href="/images/rmutt-logo.webp">
 
         <!-- Scripts -->
         @routes
@@ -49,16 +71,7 @@
     <body class="font-sans antialiased">
         @inertia
 
-        <!-- Service Worker Registration -->
-        <script>
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/build/sw.js', { scope: '/' })
-                        .then(reg => console.log('SW registered:', reg.scope))
-                        .catch(err => console.log('SW registration failed:', err));
-                });
-            }
-        </script>
+        <!-- Service Worker is registered in app.jsx -->
     </body>
 </html>
 

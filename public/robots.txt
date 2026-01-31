@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /storage/
+
+# Allow crawlers to access the sitemap
+Sitemap: https://cperepair.app/sitemap.xml

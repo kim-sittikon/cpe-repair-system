@@ -106,7 +106,7 @@ export default function Create({ auth, buildings = [] }) {
             <div className="relative w-full h-[160px] sm:h-[300px] overflow-hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/images/landing-bg-final.png')" }}
+                    style={{ backgroundImage: "url('/images/landing-bg-final.webp')" }}
                 ></div>
                 <div className="absolute inset-0 bg-black/50"></div>
                 <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">

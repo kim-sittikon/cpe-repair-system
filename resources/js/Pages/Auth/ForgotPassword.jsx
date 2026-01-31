@@ -22,7 +22,7 @@ export default function ForgotPassword({ status }) {
             {/* Blurred Background Image */}
             <div className="absolute inset-0 z-0">
                 <img
-                    src="/images/login-bg.jpg"
+                    src="/images/login-bg.webp"
                     alt="Background"
                     className="w-full h-full object-cover filter blur-[8px] scale-110"
                 />

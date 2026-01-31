@@ -195,9 +195,8 @@ class AdminUserController extends Controller
         
         $url = route('invite.show', ['token' => $token, 'email' => $invitation->email]);
 
-        Mail::to($invitation->email)->send(
-            new UserInvitationMail($url, $invitation->role)
-        );
+        // ใช้ Queue เพื่อไม่ block request (0.01 วินาที)
+        \App\Services\EmailService::sendInvitation($invitation->email, $url, $invitation->role);
     }
 
     /**

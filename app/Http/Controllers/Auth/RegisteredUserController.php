@@ -116,12 +116,18 @@ class RegisteredUserController extends Controller
 
         // Send Email with error handling
         try {
-            \Illuminate\Support\Facades\Mail::to($request->email)->send(new \App\Mail\OtpMail($otp));
-            \Illuminate\Support\Facades\Log::info('OTP Email sent successfully to: ' . $request->email);
-            return response()->json(['message' => 'ส่งรหัส OTP เรียบร้อยแล้ว']);
+            $success = \App\Services\EmailService::sendOtp($request->email, $otp);
+            
+            if ($success) {
+                return response()->json(['message' => 'ส่งรหัส OTP เรียบร้อยแล้ว']);
+            } else {
+                // OTP is still cached, user can try again
+                return response()->json([
+                    'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (อาจใช้เวลาสักครู่)',
+                ]);
+            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('OTP Email failed: ' . $e->getMessage());
-            // Still return success because OTP is cached, user can try again
             return response()->json([
                 'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (อาจใช้เวลาสักครู่)',
             ]);

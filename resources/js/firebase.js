@@ -130,4 +130,55 @@ export function isFirebaseConfigured() {
     return !!(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.messagingSenderId);
 }
 
+// ============================================
+// PWA Analytics Functions
+// ============================================
+
+/**
+ * Track PWA install event
+ */
+export function trackPWAInstall() {
+    console.log('PWA installed');
+    // If using Firebase Analytics, you can add tracking here
+    // analytics.logEvent('pwa_installed');
+}
+
+/**
+ * Track online/offline status changes
+ */
+export function initConnectionTracking() {
+    window.addEventListener('online', () => {
+        console.log('Connection restored');
+    });
+
+    window.addEventListener('offline', () => {
+        console.log('Went offline');
+    });
+}
+
+/**
+ * Get current display mode (browser/standalone/fullscreen)
+ * @returns {string} Display mode
+ */
+export function getDisplayMode() {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        return 'standalone';
+    }
+    if (window.matchMedia('(display-mode: fullscreen)').matches) {
+        return 'fullscreen';
+    }
+    if (window.navigator.standalone === true) {
+        return 'standalone-ios';
+    }
+    return 'browser';
+}
+
+/**
+ * Check if app is running as installed PWA
+ * @returns {boolean}
+ */
+export function isInstalledPWA() {
+    return getDisplayMode() !== 'browser';
+}
+
 export { messaging };

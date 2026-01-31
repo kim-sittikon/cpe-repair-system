@@ -63,7 +63,7 @@ export default function LandingPage({ urgentNews, generalNews }) {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/images/landing-bg-final.png')" }}
+                    style={{ backgroundImage: "url('/images/landing-bg-final.webp')" }}
                 ></div>
                 {/* Dark Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60"></div>
@@ -180,6 +180,7 @@ export default function LandingPage({ urgentNews, generalNews }) {
                                             <img
                                                 src={item.img}
                                                 alt={item.title}
+                                                loading="lazy"
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                             />
                                             <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider animate-pulse">
@@ -274,7 +275,7 @@ export default function LandingPage({ urgentNews, generalNews }) {
                             >
                                 {/* Image */}
                                 <div className="w-full sm:w-40 lg:w-48 h-32 sm:h-28 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative">
-                                    <img src={item.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={item.title} />
+                                    <img src={item.img} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={item.title} />
                                 </div>
 
                                 {/* Content */}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ล้างแคช - CPE Repair System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.success {
+            display: block;
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.loading {
+            display: block;
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .checklist {
+            text-align: left;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+
+        .checklist-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+
+        .check.done {
+            background: #10b981;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="icon">🧹</div>
+        <h1>ล้างแคชและ Service Worker</h1>
+        <p>หากเว็บแสดงหน้า "ไม่มีการเชื่อมต่ออินเทอร์เน็ต" ผิดพลาด กดปุ่มด้านล่างเพื่อล้างแคชเก่า</p>
+
+        <div class="checklist" id="checklist">
+            <div class="checklist-item">
+                <div class="check" id="check1">1</div>
+                <span>ยกเลิกการลงทะเบียน Service Worker เก่า</span>
+            </div>
+            <div class="checklist-item">
+                <div class="check" id="check2">2</div>
+                <span>ล้างแคชทั้งหมด</span>
+            </div>
+            <div class="checklist-item">
+                <div class="check" id="check3">3</div>
+                <span>ล้าง localStorage</span>
+            </div>
+            <div class="checklist-item">
+                <div class="check" id="check4">4</div>
+                <span>พร้อมโหลดใหม่</span>
+            </div>
+        </div>
+
+        <button class="btn" id="clearBtn" onclick="clearAll()">🗑️ ล้างแคชทั้งหมด</button>
+        <button class="btn btn-secondary" id="homeBtn" onclick="goHome()" style="display: none;">🏠
+            กลับหน้าหลัก</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        async function clearAll() {
+            const btn = document.getElementById('clearBtn');
+            const status = document.getElementById('status');
+            const homeBtn = document.getElementById('homeBtn');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ กำลังล้าง...';
+
+            status.className = 'status loading';
+            status.textContent = 'กำลังดำเนินการ...';
+
+            try {
+                // Step 1: Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                document.getElementById('check1').classList.add('done');
+                document.getElementById('check1').textContent = '✓';
+
+                // Step 2: Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+                document.getElementById('check2').classList.add('done');
+                document.getElementById('check2').textContent = '✓';
+
+                // Step 3: Clear localStorage (except auth tokens)
+                const keysToKeep = [];
+                const allKeys = Object.keys(localStorage);
+                for (const key of allKeys) {
+                    if (!keysToKeep.includes(key)) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                document.getElementById('check3').classList.add('done');
+                document.getElementById('check3').textContent = '✓';
+
+                // Step 4: Done
+                document.getElementById('check4').classList.add('done');
+                document.getElementById('check4').textContent = '✓';
+
+                status.className = 'status success';
+                status.innerHTML = '✅ ล้างแคชสำเร็จ!<br>กดปุ่มด้านล่างเพื่อกลับหน้าหลัก';
+
+                btn.style.display = 'none';
+                homeBtn.style.display = 'inline-block';
+
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ เกิดข้อผิดพลาด: ' + error.message;
+                btn.disabled = false;
+                btn.textContent = '🗑️ ลองใหม่';
+            }
+        }
+
+        function goHome() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+
+</html>
