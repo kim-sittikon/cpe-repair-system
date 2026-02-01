@@ -104,9 +104,21 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-                navigateFallback: '/offline.html',
-                navigateFallbackDenylist: [/^\/api/, /^\/storage/],
+                // 🔴 CRITICAL: ปิด NavigationRoute เพราะ Laravel ไม่ใช่ SPA
+                // Vite PWA default จะสร้าง NavigationRoute → index.html ซึ่งไม่มีใน Laravel
+                // ทำให้ SW redirect ไป index.html → ไม่เจอ → แสดงหน้า offline
+                navigateFallback: null,
                 runtimeCaching: [
+                    // Navigation requests - ใช้ NetworkFirst เพื่อให้ลอง network ก่อน
+                    {
+                        urlPattern: ({ request }) => request.mode === 'navigate',
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'pages-cache',
+                            networkTimeoutSeconds: 10,
+                            plugins: []
+                        }
+                    },
                     {
                         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
                         handler: 'CacheFirst',
