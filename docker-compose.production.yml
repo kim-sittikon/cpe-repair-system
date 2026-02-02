@@ -1,0 +1,213 @@
+# Production Docker Compose - Optimized for 4GB RAM / 2 vCPU
+# Usage: docker compose -f docker-compose.production.yml up -d
+
+services:
+  # ============================================
+  # 🚀 Laravel Application (Main)
+  # ============================================
+  app:
+    build:
+      context: ./vendor/laravel/sail/runtimes/8.5
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: '1000'
+    image: cpe-repair/app:production
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WWWUSER: '1000'
+      LARAVEL_SAIL: 1
+      APP_ENV: production
+      APP_DEBUG: 'false'
+    volumes:
+      - '.:/var/www/html'
+    networks:
+      - cpe-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ============================================
+  # 📬 Queue Worker (High Priority)
+  # ============================================
+  queue-high:
+    build:
+      context: ./vendor/laravel/sail/runtimes/8.5
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: '1000'
+    image: cpe-repair/app:production
+    restart: always
+    command: php /var/www/html/artisan queue:work --queue=otp-high,default --sleep=2 --tries=3 --max-time=3600 --memory=256
+    environment:
+      WWWUSER: '1000'
+      LARAVEL_SAIL: 1
+    volumes:
+      - '.:/var/www/html'
+    networks:
+      - cpe-network
+    depends_on:
+      - app
+      - mysql
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 320M
+          cpus: '0.25'
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # 📧 Queue Worker (Emails)
+  # ============================================
+  queue-emails:
+    build:
+      context: ./vendor/laravel/sail/runtimes/8.5
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: '1000'
+    image: cpe-repair/app:production
+    restart: always
+    command: php /var/www/html/artisan queue:work --queue=emails --sleep=5 --tries=3 --max-time=3600 --memory=128
+    environment:
+      WWWUSER: '1000'
+      LARAVEL_SAIL: 1
+    volumes:
+      - '.:/var/www/html'
+    networks:
+      - cpe-network
+    depends_on:
+      - app
+      - mysql
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+          cpus: '0.15'
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ============================================
+  # 🗄️ MySQL Database
+  # ============================================
+  mysql:
+    image: mysql:8.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    networks:
+      - cpe-network
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
+          cpus: '0.75'
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ============================================
+  # ⚡ Redis Cache & Session
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - cpe-network
+    deploy:
+      resources:
+        limits:
+          memory: 320M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ============================================
+  # 🌐 Cloudflare Tunnel
+  # ============================================
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - cpe-network
+    depends_on:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+# ============================================
+# 🔗 Networks & Volumes
+# ============================================
+networks:
+  cpe-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local

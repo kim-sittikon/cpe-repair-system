@@ -8,11 +8,10 @@ class FileRepair extends Model
 {
     protected $table = 'file_repair';
     protected $primaryKey = 'file_id';
-    protected $fillable = ['file_path', 'repair_id'];
+    protected $fillable = ['file_path', 'repair_id', 'file_type'];
 
     public function request()
     {
         return $this->belongsTo(RequestRepair::class, 'repair_id');
     }
-
 }

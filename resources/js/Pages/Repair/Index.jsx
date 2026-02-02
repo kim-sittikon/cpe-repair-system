@@ -64,6 +64,15 @@ export default function Index({ auth, repairs, filters }) {
         }
     };
 
+    // Check if any selected item is processing (cannot create job for processing items)
+    const hasSelectedProcessing = selectedItems.some(id => {
+        const repair = repairs.data.find(r => r.numeric_id === id);
+        return repair && repair.raw_status === 'processing';
+    });
+
+    // Check if can create job (has selection AND no processing items)
+    const canCreateJob = selectedItems.length > 0 && !hasSelectedProcessing;
+
     // Helper: Priority Badge (compact for table)
     const renderPriority = (priority, hasPersonalMatch = false) => {
         const badge = hasPersonalMatch ? (
@@ -245,6 +254,7 @@ export default function Index({ auth, repairs, filters }) {
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
                                 >
                                     <option value="pending">🕐 รอดำเนินการ</option>
+                                    <option value="processing">🔄 กำลังดำเนินการ</option>
                                     <option value="finished">✅ เสร็จสิ้น</option>
                                     <option value="all">📁 ทั้งหมด</option>
                                 </select>
@@ -257,16 +267,20 @@ export default function Index({ auth, repairs, filters }) {
                             <div className="flex flex-row gap-3">
                                 <button
                                     onClick={() => {
-                                        if (selectedItems.length === 0) {
-                                            alert('กรุณาเลือกรายการที่ต้องการสร้างใบงาน');
+                                        if (!canCreateJob) {
+                                            if (hasSelectedProcessing) {
+                                                alert('ไม่สามารถสร้างใบงานได้ เนื่องจากมีรายการที่กำลังดำเนินการอยู่แล้ว');
+                                            } else {
+                                                alert('กรุณาเลือกรายการที่ต้องการสร้างใบงาน');
+                                            }
                                             return;
                                         }
                                         const queryString = selectedItems.map(id => `ids[]=${encodeURIComponent(id)}`).join('&');
                                         router.visit(`/repairs/jobs/create?${queryString}`);
                                     }}
-                                    disabled={selectedItems.length === 0}
+                                    disabled={!canCreateJob}
                                     className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 border-2
-                                        ${selectedItems.length > 0
+                                        ${canCreateJob
                                             ? 'border-orange-500 bg-white text-orange-600 hover:bg-orange-50 shadow-sm hover:shadow'
                                             : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'}`}
                                 >
@@ -322,6 +336,7 @@ export default function Index({ auth, repairs, filters }) {
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
                                 >
                                     <option value="pending">🕐 รอดำเนินการ</option>
+                                    <option value="processing">🔄 กำลังดำเนินการ</option>
                                     <option value="finished">✅ ดำเนินการเสร็จสิ้น</option>
                                     <option value="all">📁 รายการทั้งหมด</option>
                                 </select>

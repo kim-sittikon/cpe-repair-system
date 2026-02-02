@@ -246,7 +246,7 @@ class RepairController extends Controller
             });
 
         $statusOptions = [
-            ['value' => 'processing', 'label' => 'รับเรื่อง'],
+            ['value' => 'processing', 'label' => 'กำลังดำเนินการ'],
             ['value' => 'finished', 'label' => 'ดำเนินการเสร็จสิ้น'],
         ];
 
@@ -261,10 +261,22 @@ class RepairController extends Controller
      */
     public function updateStatus(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'ids' => 'required|array|min:1',
             'ids.*' => 'required|integer',
             'status' => 'required|in:processing,finished',
+        ];
+
+        // If finishing, require completion notes
+        if ($request->status === 'finished') {
+            $rules['completion_notes'] = 'required|string|min:10';
+            $rules['completion_images'] = 'nullable|array|max:5';
+            $rules['completion_images.*'] = 'image|mimes:jpeg,png,jpg,gif,webp|max:5120';
+        }
+
+        $validated = $request->validate($rules, [
+            'completion_notes.required' => 'กรุณากรอกรายละเอียดการดำเนินงาน',
+            'completion_notes.min' => 'รายละเอียดต้องมีอย่างน้อย 10 ตัวอักษร',
         ]);
 
         // Get repairs before update to send notifications
@@ -272,8 +284,31 @@ class RepairController extends Controller
             ->with('account')
             ->get();
 
+        $updateData = ['status' => $validated['status']];
+
+        // If finishing, add completion data
+        if ($validated['status'] === 'finished') {
+            $updateData['completion_notes'] = $validated['completion_notes'];
+            $updateData['completed_at'] = now();
+            $updateData['completed_by'] = auth()->user()->account_id;
+        }
+
         $updated = RequestRepair::whereIn('repair_id', $validated['ids'])
-            ->update(['status' => $validated['status']]);
+            ->update($updateData);
+
+        // Handle completion images if provided
+        if ($validated['status'] === 'finished' && $request->hasFile('completion_images')) {
+            foreach ($validated['ids'] as $repairId) {
+                foreach ($request->file('completion_images') as $image) {
+                    $path = $image->store('repair_completion', 'public');
+                    \App\Models\FileRepair::create([
+                        'file_path' => $path,
+                        'repair_id' => $repairId,
+                        'file_type' => 'completion',
+                    ]);
+                }
+            }
+        }
 
         // Send push notifications to reporters
         $fcm = new \App\Services\FCMService();
@@ -292,6 +327,7 @@ class RepairController extends Controller
         return redirect()->route('repairs.index')
             ->with('success', "อัปเดตสถานะเรียบร้อย {$updated} รายการ");
     }
+
 
     /**
      * Vote credit for a repair reporter

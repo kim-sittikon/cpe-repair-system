@@ -134,4 +134,104 @@ class EmailService
             'queue_connection' => config('queue.default'),
         ];
     }
+
+    // ========================================
+    // Async OTP Methods (Enterprise-Grade)
+    // ========================================
+
+    /**
+     * ส่ง OTP email แบบ async (ไม่ block request)
+     * 
+     * @param string $email Email ผู้รับ
+     * @param string $otp รหัส OTP
+     * @return string requestId สำหรับ polling status
+     */
+    public static function sendOtpAsync(string $email, string $otp): string
+    {
+        $requestId = \Illuminate\Support\Str::uuid()->toString();
+        
+        // Log: OTP requested
+        Log::channel('email')->info('📨 OTP requested', [
+            'email' => $email,
+            'request_id' => $requestId,
+        ]);
+
+        // Mark as pending in cache (ผูก requestId กับ email สำหรับ security)
+        $cacheKey = "otp_status_{$requestId}";
+        \Illuminate\Support\Facades\Cache::put($cacheKey, [
+            'status' => 'pending',
+            'email' => $email,
+            'created_at' => now()->toIso8601String(),
+        ], now()->addMinutes(10));
+
+        // Mark last sent time for rate limiting
+        $rateLimitKey = "otp_last_sent_{$email}";
+        \Illuminate\Support\Facades\Cache::put($rateLimitKey, now()->timestamp, now()->addMinutes(2));
+
+        // Dispatch to queue
+        \App\Jobs\SendOtpJob::dispatch($email, $otp, $requestId);
+
+        return $requestId;
+    }
+
+    /**
+     * ตรวจสอบสถานะการส่ง OTP
+     * 
+     * @param string $requestId Request ID จาก sendOtpAsync
+     * @param string|null $email Email สำหรับ security check
+     * @return array ['status' => 'pending'|'sent'|'failed'|'unknown']
+     */
+    public static function getOtpStatus(string $requestId, ?string $email = null): array
+    {
+        $cacheKey = "otp_status_{$requestId}";
+        $data = \Illuminate\Support\Facades\Cache::get($cacheKey);
+
+        if (!$data) {
+            return ['status' => 'unknown'];
+        }
+
+        // Security: ตรวจสอบว่า requestId เป็นของ email ที่ส่งมา
+        if ($email && isset($data['email']) && $data['email'] !== $email) {
+            Log::channel('email')->warning('⚠️ OTP status check mismatch', [
+                'request_id' => $requestId,
+                'expected_email' => $data['email'],
+                'provided_email' => $email,
+            ]);
+            return ['status' => 'unknown'];
+        }
+
+        return [
+            'status' => $data['status'] ?? 'unknown',
+            'updated_at' => $data['updated_at'] ?? null,
+        ];
+    }
+
+    /**
+     * ตรวจสอบว่าสามารถส่ง OTP ได้หรือไม่ (rate limiting)
+     * 
+     * @param string $email Email ที่จะส่ง
+     * @return array ['allowed' => bool, 'wait_seconds' => int]
+     */
+    public static function canSendOtp(string $email): array
+    {
+        $rateLimitKey = "otp_last_sent_{$email}";
+        $lastSent = \Illuminate\Support\Facades\Cache::get($rateLimitKey);
+        
+        if (!$lastSent) {
+            return ['allowed' => true, 'wait_seconds' => 0];
+        }
+
+        $elapsed = now()->timestamp - $lastSent;
+        $cooldown = 60; // 60 วินาที
+
+        if ($elapsed < $cooldown) {
+            return [
+                'allowed' => false,
+                'wait_seconds' => $cooldown - $elapsed,
+            ];
+        }
+
+        return ['allowed' => true, 'wait_seconds' => 0];
+    }
 }
+

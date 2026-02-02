@@ -100,7 +100,7 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Send OTP to the user's email.
+     * Send OTP to the user's email (Async with polling support)
      */
     public function sendOtp(Request $request)
     {
@@ -108,29 +108,35 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . \App\Models\Account::class, 'regex:/@mail\.rmutt\.ac\.th$/i'],
         ]);
 
+        // Rate limiting check
+        $rateLimit = \App\Services\EmailService::canSendOtp($request->email);
+        if (!$rateLimit['allowed']) {
+            return response()->json([
+                'message' => "กรุณารอ {$rateLimit['wait_seconds']} วินาที ก่อนขอรหัสใหม่",
+                'wait_seconds' => $rateLimit['wait_seconds'],
+            ], 429);
+        }
+
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         // Cache OTP for 5 minutes
         \Illuminate\Support\Facades\Cache::forget('otp_' . $request->email); // Clear old first
         \Illuminate\Support\Facades\Cache::put('otp_' . $request->email, $otp, now()->addMinutes(5));
 
-        // Send Email with error handling
-        try {
-            $success = \App\Services\EmailService::sendOtp($request->email, $otp);
-            
-            if ($success) {
-                return response()->json(['message' => 'ส่งรหัส OTP เรียบร้อยแล้ว']);
-            } else {
-                // OTP is still cached, user can try again
-                return response()->json([
-                    'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (อาจใช้เวลาสักครู่)',
-                ]);
-            }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('OTP Email failed: ' . $e->getMessage());
+        // Send Email sync (ส่งทันที - เร็วกว่า queue)
+        $sent = \App\Services\EmailService::sendOtp($request->email, $otp);
+
+        if ($sent) {
             return response()->json([
-                'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (อาจใช้เวลาสักครู่)',
+                'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว กรุณาตรวจสอบอีเมลของคุณ',
+                'success' => true,
             ]);
+        } else {
+            return response()->json([
+                'message' => 'ไม่สามารถส่งรหัส OTP ได้ กรุณาลองใหม่อีกครั้ง',
+                'success' => false,
+            ], 500);
         }
     }
 }
+

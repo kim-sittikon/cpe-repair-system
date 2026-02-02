@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function Status({ auth, repairs, statusOptions }) {
-    const [selectedStatus, setSelectedStatus] = useState('finished');
+    const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]?.value || 'processing');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState('status');
     const [votedRepairs, setVotedRepairs] = useState(
@@ -12,6 +12,12 @@ export default function Status({ auth, repairs, statusOptions }) {
     const [votingId, setVotingId] = useState(null);
     // Lightbox modal state
     const [lightboxImage, setLightboxImage] = useState(null);
+
+    // Completion form state
+    const [completionNotes, setCompletionNotes] = useState('');
+    const [completionImages, setCompletionImages] = useState([]);
+    const [imageError, setImageError] = useState('');
+    const fileInputRef = useRef(null);
 
     const handleVote = (repairId, vote) => {
         setVotingId(repairId);
@@ -30,12 +36,42 @@ export default function Status({ auth, repairs, statusOptions }) {
         e.preventDefault();
         setIsSubmitting(true);
 
-        router.patch(route('repairs.status.update'), {
-            ids: repairs.map(r => r.numeric_id),
-            status: selectedStatus,
-        }, {
+        const formData = new FormData();
+        repairs.forEach(r => formData.append('ids[]', r.numeric_id));
+        formData.append('status', selectedStatus);
+
+        // Add completion data if finishing
+        if (selectedStatus === 'finished') {
+            formData.append('completion_notes', completionNotes);
+            completionImages.forEach((file, index) => {
+                formData.append(`completion_images[${index}]`, file);
+            });
+        }
+
+        router.post(route('repairs.status.update'), formData, {
+            forceFormData: true,
+            headers: { 'X-HTTP-Method-Override': 'PATCH' },
             onFinish: () => setIsSubmitting(false),
         });
+    };
+
+    // Handle image upload
+    const handleImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const totalFiles = completionImages.length + files.length;
+
+        if (totalFiles > 5) {
+            setImageError('อัปโหลดได้สูงสุด 5 รูป');
+            return;
+        }
+
+        setImageError('');
+        setCompletionImages(prev => [...prev, ...files]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const removeImage = (index) => {
+        setCompletionImages(prev => prev.filter((_, i) => i !== index));
     };
 
     const displayText = repairs.map(r => `${r.id}, ${r.title}`).join(' | ');
@@ -200,20 +236,110 @@ export default function Status({ auth, repairs, statusOptions }) {
                                                 onChange={(e) => setSelectedStatus(e.target.value)}
                                                 className="w-full px-5 py-4 border-2 border-orange-200 rounded-xl bg-orange-50/50 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-gray-700 font-medium cursor-pointer hover:border-orange-300 text-center text-lg"
                                             >
-                                                <option value="finished">✅ ดำเนินการเสร็จสิ้น</option>
+                                                {statusOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.value === 'processing' ? '🔄' : '✅'} {option.label}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
 
                                         {/* Status Flow */}
-                                        <div className="bg-gray-50 rounded-xl p-4 mb-8">
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
                                             <div className="flex items-center justify-center gap-3 text-sm">
-                                                <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg font-medium">รับเรื่อง</span>
-                                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                                </svg>
-                                                <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">ดำเนินการเสร็จสิ้น</span>
+                                                {selectedStatus === 'processing' ? (
+                                                    <>
+                                                        <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg font-medium">รอดำเนินการ</span>
+                                                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                        </svg>
+                                                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg font-medium">กำลังดำเนินการ</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg font-medium">กำลังดำเนินการ</span>
+                                                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                        </svg>
+                                                        <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">เสร็จสิ้น</span>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
+
+                                        {/* Completion Form - Show when finishing */}
+                                        {selectedStatus === 'finished' && (
+                                            <div className="mb-8 text-left space-y-4">
+                                                {/* Completion Notes */}
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        <span className="text-red-500">*</span> รายละเอียดการดำเนินงาน
+                                                    </label>
+                                                    <textarea
+                                                        value={completionNotes}
+                                                        onChange={(e) => setCompletionNotes(e.target.value)}
+                                                        rows={4}
+                                                        placeholder="กรอกรายละเอียดการซ่อม เช่น อะไหล่ที่เปลี่ยน, วิธีการแก้ไข..."
+                                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"
+                                                        required
+                                                    />
+                                                    <p className="text-xs text-gray-400 mt-1">ขั้นต่ำ 10 ตัวอักษร</p>
+                                                </div>
+
+                                                {/* Completion Images */}
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        รูปภาพหลังเสร็จงาน (ไม่บังคับ)
+                                                    </label>
+
+                                                    {/* Image Preview */}
+                                                    {completionImages.length > 0 && (
+                                                        <div className="flex flex-wrap gap-3 mb-3">
+                                                            {completionImages.map((file, index) => (
+                                                                <div key={index} className="relative group">
+                                                                    <img
+                                                                        src={URL.createObjectURL(file)}
+                                                                        alt={`Preview ${index + 1}`}
+                                                                        className="w-20 h-20 object-cover rounded-xl border-2 border-gray-200"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeImage(index)}
+                                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                                                    >
+                                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Upload Button */}
+                                                    {completionImages.length < 5 && (
+                                                        <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-orange-400 hover:bg-orange-50/50 transition-all">
+                                                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <span className="text-sm text-gray-500">เพิ่มรูปภาพ ({completionImages.length}/5)</span>
+                                                            <input
+                                                                ref={fileInputRef}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                multiple
+                                                                onChange={handleImageUpload}
+                                                                className="hidden"
+                                                            />
+                                                        </label>
+                                                    )}
+
+                                                    {imageError && (
+                                                        <p className="text-xs text-red-500 mt-2">{imageError}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Action Buttons */}
                                         <div className="flex flex-row justify-center gap-3">

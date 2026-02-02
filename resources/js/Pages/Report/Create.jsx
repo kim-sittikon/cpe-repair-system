@@ -3,7 +3,6 @@ import { useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Camera, MapPin, AlertCircle, FileText, Send } from 'lucide-react';
 import CameraCapture from '@/Components/CameraCapture';
-import GeolocationDisplay from '@/Components/GeolocationDisplay';
 
 export default function Create({ auth, buildings = [] }) {
     // The original code had `const { auth } = usePage().props;` here.
@@ -63,23 +62,6 @@ export default function Create({ auth, buildings = [] }) {
         setImagePreview([...imagePreview, URL.createObjectURL(file)]);
         setShowCamera(false);
     }, [data.images, imagePreview, setData]);
-
-    // Handle geolocation change
-    const handleLocationChange = useCallback((location) => {
-        if (location) {
-            setData(currentData => ({
-                ...currentData,
-                latitude: location.latitude,
-                longitude: location.longitude,
-            }));
-        } else {
-            setData(currentData => ({
-                ...currentData,
-                latitude: null,
-                longitude: null,
-            }));
-        }
-    }, [setData]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -250,11 +232,11 @@ export default function Create({ auth, buildings = [] }) {
                             <label className="text-xl font-medium text-gray-800">แนบรูปภาพ</label>
 
                             <div className="flex flex-wrap items-center gap-3">
-                                {/* Camera button */}
+                                {/* Camera button - Mobile only */}
                                 <button
                                     type="button"
                                     onClick={() => setShowCamera(true)}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-100 hover:bg-orange-200 border border-orange-300 rounded-lg transition-colors"
+                                    className="sm:hidden inline-flex items-center gap-2 px-4 py-2.5 bg-orange-100 hover:bg-orange-200 border border-orange-300 rounded-lg transition-colors"
                                 >
                                     <Camera className="w-5 h-5 text-orange-600" />
                                     <span className="text-sm font-medium text-orange-700">ถ่ายรูป</span>
@@ -311,15 +293,6 @@ export default function Create({ auth, buildings = [] }) {
                             )}
                         </div>
 
-                        {/* Geolocation - Show only for repair type */}
-                        {data.type === 'repair' && (
-                            <div className="space-y-3">
-                                <GeolocationDisplay
-                                    onLocationChange={handleLocationChange}
-                                    autoFetch={false}
-                                />
-                            </div>
-                        )}
 
                         {/* Submit Buttons */}
                         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-6">

@@ -33,11 +33,23 @@ class DashboardController extends Controller
                 ];
             });
 
-        // 2. Fetch General News (Paginated 4)
-        $generalNews = Announcement::with(['account:account_id,first_name,last_name', 'building', 'room'])
-            ->where('is_urgent', false)
+        // 2. Fetch General News (Paginated 6) with Search
+        $generalNewsQuery = Announcement::with(['account:account_id,first_name,last_name', 'building', 'room'])
+            ->where('is_urgent', false);
+        
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $generalNewsQuery->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('detail', 'like', "%{$search}%");
+            });
+        }
+        
+        $generalNews = $generalNewsQuery
             ->latest()
-            ->paginate(4)
+            ->paginate(6)
+            ->withQueryString()
             ->through(function ($item) {
                 return [
                     'id' => $item->announcement_id,

@@ -54,6 +54,36 @@ services:
             options:
                 max-size: "5m"
                 max-file: "2"
+    queue-worker:
+        restart: always
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.5
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.5/app
+        entrypoint: ["php", "/var/www/html/artisan", "queue:work", "--queue=otp-high,default,emails", "--sleep=3", "--tries=3", "--max-time=3600"]
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
+            - mysql
+            - redis
+        deploy:
+            resources:
+                limits:
+                    memory: 256M
+                    cpus: '0.25'
+        logging:
+            driver: json-file
+            options:
+                max-size: "5m"
+                max-file: "2"
     mysql:
         restart: always
         image: 'mysql:8.4'

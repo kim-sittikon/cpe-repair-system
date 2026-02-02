@@ -1,6 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Search } from 'lucide-react';
 
 export default function LandingPage({ urgentNews, generalNews }) {
     // --- Carousel Logic ---
@@ -8,28 +8,67 @@ export default function LandingPage({ urgentNews, generalNews }) {
     const [isPaused, setIsPaused] = useState(false);
     const carouselRef = useRef(null);
     const [cardWidth, setCardWidth] = useState(340);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const searchTimeoutRef = useRef(null);
 
-    // Safeguard: Ensure urgentNews is an ARRAY
-    const validUrgentNews = Array.isArray(urgentNews)
+    // Safeguard: Ensure urgentNews is an ARRAY and limit to 7 items max
+    const MAX_URGENT_NEWS = 7;
+    const rawUrgentNews = Array.isArray(urgentNews)
         ? urgentNews
         : (urgentNews ? Object.values(urgentNews) : []);
+    const validUrgentNews = rawUrgentNews.slice(0, MAX_URGENT_NEWS);
 
     const validGeneralNews = generalNews || { data: [] };
+
+    // Debounced real-time search
+    useEffect(() => {
+        // Clear previous timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Set new timeout for search (300ms delay)
+        searchTimeoutRef.current = setTimeout(() => {
+            if (searchQuery !== '' || window.location.search.includes('search=')) {
+                setIsSearching(true);
+                router.get(
+                    route('dashboard'),
+                    searchQuery ? { search: searchQuery } : {},
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        onFinish: () => setIsSearching(false),
+                    }
+                );
+            }
+        }, 300);
+
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, [searchQuery]);
     const validGeneralNewsData = Array.isArray(validGeneralNews.data)
         ? validGeneralNews.data
         : (validGeneralNews.data ? Object.values(validGeneralNews.data) : []);
 
     const hasUrgentNews = validUrgentNews.length > 0;
+    const [visibleCards, setVisibleCards] = useState(3);
 
-    // Responsive card width
+    // Responsive card width and visible cards
     useEffect(() => {
         const updateCardWidth = () => {
             if (window.innerWidth < 640) {
                 setCardWidth(window.innerWidth - 48); // Mobile: full width - padding
+                setVisibleCards(1);
             } else if (window.innerWidth < 1024) {
                 setCardWidth(320); // Tablet
+                setVisibleCards(2);
             } else {
                 setCardWidth(360); // Desktop
+                setVisibleCards(3);
             }
         };
         updateCardWidth();
@@ -44,15 +83,18 @@ export default function LandingPage({ urgentNews, generalNews }) {
         return () => clearTimeout(timeout);
     }, [currentIndex, isPaused, hasUrgentNews]);
 
+    // Calculate max index to prevent empty space
+    const maxIndex = Math.max(0, validUrgentNews.length - visibleCards);
+
     const nextSlide = () => {
         if (hasUrgentNews) {
-            setCurrentIndex((prev) => (prev + 1) % validUrgentNews.length);
+            setCurrentIndex((prev) => prev >= maxIndex ? 0 : prev + 1);
         }
     };
 
     const prevSlide = () => {
         if (hasUrgentNews) {
-            setCurrentIndex((prev) => (prev - 1 + validUrgentNews.length) % validUrgentNews.length);
+            setCurrentIndex((prev) => prev <= 0 ? maxIndex : prev - 1);
         }
     };
 
@@ -145,9 +187,9 @@ export default function LandingPage({ urgentNews, generalNews }) {
                             <h4 className="text-lg sm:text-xl font-semibold text-gray-700 border-l-4 border-orange-500 pl-3">
                                 เรื่องด่วน (Urgent)
                             </h4>
-                            {/* Indicators */}
+                            {/* Indicators - show only for available slide positions */}
                             <div className="flex gap-1.5 sm:gap-2">
-                                {validUrgentNews.map((_, idx) => (
+                                {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentIndex(idx)}
@@ -160,14 +202,17 @@ export default function LandingPage({ urgentNews, generalNews }) {
                             </div>
                         </div>
 
-                        {/* Carousel Viewport */}
+                        {/* Carousel Viewport - with padding to prevent cut-off */}
                         <div
                             ref={carouselRef}
-                            className="overflow-hidden w-full relative"
+                            className="overflow-hidden w-full relative -mx-4 px-4 sm:-mx-6 sm:px-6"
                         >
                             <div
                                 className="flex transition-transform duration-500 ease-out gap-4 sm:gap-6"
-                                style={{ transform: `translateX(-${currentIndex * (cardWidth + (window.innerWidth < 640 ? 16 : 24))}px)` }}
+                                style={{
+                                    transform: `translateX(-${currentIndex * (cardWidth + (window.innerWidth < 640 ? 16 : 24))}px)`,
+                                    paddingRight: '80px' // Show peek of next card
+                                }}
                             >
                                 {validUrgentNews.map((item, index) => (
                                     <div
@@ -192,38 +237,23 @@ export default function LandingPage({ urgentNews, generalNews }) {
                                         </div>
 
                                         {/* Content Area */}
-                                        <div className="p-4 sm:p-5 space-y-2 sm:space-y-3">
+                                        <div className="p-4 sm:p-5">
                                             <h5 className="font-bold text-lg sm:text-xl text-gray-800 line-clamp-1 leading-tight group-hover:text-orange-500 transition-colors">
                                                 {item.title}
                                             </h5>
-                                            <p className="text-sm text-gray-500 line-clamp-2 font-light leading-relaxed">
+                                            <p className="text-sm text-gray-500 line-clamp-2 font-light leading-relaxed mt-2">
                                                 {item.desc}
                                             </p>
 
-                                            {/* Location Badge */}
+                                            {/* Location Badge - แสดงตึก/ห้อง */}
                                             {(item.building_name || item.room_name) && (
-                                                <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-lg w-fit">
+                                                <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-lg w-fit mt-3">
                                                     <MapPin className="w-3 h-3" />
                                                     <span className="font-medium truncate max-w-[180px]">
                                                         {item.building_name}{item.room_name && ` / ${item.room_name}`}
                                                     </span>
                                                 </div>
                                             )}
-
-                                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                                                <span className="text-xs text-gray-400 font-light flex items-center gap-1.5">
-                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                    อ่านต่อ
-                                                </span>
-                                                <button className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white flex items-center justify-center transition-all duration-200">
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                                    </svg>
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -258,11 +288,26 @@ export default function LandingPage({ urgentNews, generalNews }) {
                             <input
                                 type="text"
                                 placeholder="ค้นหาข่าวสาร..."
-                                className="w-full sm:w-64 pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all bg-white"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full sm:w-64 pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all bg-white"
                             />
-                            <svg className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            {isSearching ? (
+                                <svg className="w-4 h-4 text-orange-500 absolute left-3.5 top-1/2 transform -translate-y-1/2 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            ) : (
+                                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 transform -translate-y-1/2" />
+                            )}
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
+                                >
+                                    ×
+                                </button>
+                            )}
                         </div>
                     </div>
 

@@ -8,7 +8,15 @@ class RequestRepair extends Model
 {
     protected $table = 'requests_repair';
     protected $primaryKey = 'repair_id';
-    protected $fillable = ['title', 'description', 'status', 'priority', 'account_id', 'building_id', 'room_id', 'credited'];
+    protected $fillable = [
+        'title', 'description', 'status', 'priority', 
+        'account_id', 'building_id', 'room_id', 'credited',
+        'completion_notes', 'completed_at', 'completed_by'
+    ];
+
+    protected $casts = [
+        'completed_at' => 'datetime',
+    ];
 
     public function account() // requester
     {
@@ -36,4 +44,21 @@ class RequestRepair extends Model
         return $this->hasMany(FileRepair::class, 'repair_id');
     }
 
+    // Files from reporter (original request)
+    public function requestFiles()
+    {
+        return $this->hasMany(FileRepair::class, 'repair_id')->where('file_type', 'request');
+    }
+
+    // Files from staff when completing
+    public function completionFiles()
+    {
+        return $this->hasMany(FileRepair::class, 'repair_id')->where('file_type', 'completion');
+    }
+
+    // Who completed the repair
+    public function completedBy()
+    {
+        return $this->belongsTo(Account::class, 'completed_by');
+    }
 }

@@ -195,4 +195,11 @@ Route::get('/privacy-policy', function () {
     return Inertia::render('Legal/PrivacyPolicy');
 })->name('privacy.policy');
 
+// OTP Status Check (for async polling)
+Route::get('/otp-status/{requestId}', function ($requestId, \Illuminate\Http\Request $request) {
+    $status = \App\Services\EmailService::getOtpStatus($requestId, $request->query('email'));
+    return response()->json($status);
+})->name('otp.status');
+
 require __DIR__ . '/auth.php';
+
