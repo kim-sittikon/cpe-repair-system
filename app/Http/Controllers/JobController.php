@@ -183,11 +183,25 @@ class JobController extends Controller
      */
     public function show($id)
     {
-        $job = Job::with(['creator', 'repairs.account', 'repairs.building', 'repairs.room', 'jobSteps.assignee'])
+        $job = Job::with(['creator', 'repairs.account', 'repairs.building', 'repairs.room', 'jobSteps.assignee', 'jobSteps.files.repairFile'])
             ->findOrFail($id);
 
+        // Explicitly transform job data to ensure files are included
+        $jobData = $job->toArray();
+        $jobData['job_steps'] = $job->jobSteps->sortBy('step_number')->values()->map(function ($step) {
+            $stepArr = $step->toArray();
+            $stepArr['files'] = $step->files->map(function ($file) {
+                $fileArr = $file->toArray();
+                if ($file->repairFile) {
+                    $fileArr['repair_file'] = $file->repairFile->toArray();
+                }
+                return $fileArr;
+            })->toArray();
+            return $stepArr;
+        })->toArray();
+
         return Inertia::render('Jobs/Show', [
-            'job' => $job,
+            'job' => $jobData,
         ]);
     }
 
@@ -216,13 +230,16 @@ class JobController extends Controller
         
         $step->save();
 
-        // Handle file uploads
+        // Handle file uploads (save proof of work completion)
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $path = $file->store('job_files/' . $step->job_id, 'public');
                 
-                // Create file record if you have a file table
-                // For now, we'll skip this part
+                // Create file record in file_job table
+                FileJob::create([
+                    'jobstep_id' => $step->jobstep_id,
+                    'file_path' => $path,
+                ]);
             }
         }
 

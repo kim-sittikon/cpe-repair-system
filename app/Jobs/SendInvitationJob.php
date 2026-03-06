@@ -8,33 +8,32 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Job สำหรับส่ง OTP Email แบบ Async ผ่าน Brevo HTTP API
+ * Job สำหรับส่ง Invitation Email แบบ Async ผ่าน Brevo HTTP API
  * 
  * ⚡ Enterprise-Grade Features:
  * - ใช้ HTTP API (port 443) ไม่โดน block
- * - Response เร็ว ~200ms (เทียบกับ SMTP 2-3s)
+ * - Response เร็ว ~200ms
  * - Built-in retry ใน BrevoService
- * - Priority Queue: otp-high
+ * - Priority Queue: emails
  * 
  * @see App\Services\BrevoService
  */
-class SendOtpJob implements ShouldQueue
+class SendInvitationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * จำนวนครั้งที่ retry
      */
-    public int $tries = 2;
+    public int $tries = 3;
 
     /**
      * Backoff time (seconds)
      */
-    public array $backoff = [2, 5];
+    public array $backoff = [5, 15, 30];
 
     /**
      * Timeout สำหรับ job (seconds)
@@ -46,10 +45,11 @@ class SendOtpJob implements ShouldQueue
      */
     public function __construct(
         public string $email,
-        public string $otp,
-        public string $requestId
+        public string $inviteUrl,
+        public string $role
     ) {
-        $this->onQueue('otp-high');
+        // ใช้ default queue เพราะ system config ไม่มี 'emails' queue
+        $this->onQueue('default');
     }
 
     /**
@@ -57,37 +57,30 @@ class SendOtpJob implements ShouldQueue
      */
     public function handle(BrevoService $brevoService): void
     {
-        Log::channel('email')->info('🚀 OTP job started (Brevo API)', [
+        Log::channel('email')->info('📧 Invitation job started (Brevo API)', [
             'email' => $this->email,
-            'request_id' => $this->requestId,
+            'role' => $this->role,
             'attempt' => $this->attempts(),
         ]);
 
-        // ส่ง OTP ผ่าน Brevo HTTP API
-        $response = $brevoService->sendOtpEmail($this->email, $this->otp);
+        // ส่ง Invitation ผ่าน Brevo HTTP API
+        $response = $brevoService->sendInvitationEmail($this->email, $this->inviteUrl, $this->role);
 
         if ($response->success) {
-            $this->updateStatus('sent');
-
-            Log::channel('email')->info('✅ OTP sent via Brevo API', [
+            Log::channel('email')->info('✅ Invitation email sent via Brevo API', [
                 'email' => $this->email,
-                'request_id' => $this->requestId,
+                'role' => $this->role,
                 'message_id' => $response->messageId,
                 'duration_ms' => $response->durationMs,
             ]);
         } else {
-            Log::channel('email')->error('❌ OTP job failed (Brevo API)', [
+            Log::channel('email')->error('❌ Invitation job failed (Brevo API)', [
                 'email' => $this->email,
-                'request_id' => $this->requestId,
+                'role' => $this->role,
                 'attempt' => $this->attempts(),
                 'error' => $response->error,
                 'duration_ms' => $response->durationMs,
             ]);
-
-            // ถ้าเป็น attempt สุดท้าย ให้ mark เป็น failed
-            if ($this->attempts() >= $this->tries) {
-                $this->updateStatus('failed');
-            }
 
             // Throw exception เพื่อให้ queue retry
             throw new \Exception("Brevo API failed: {$response->error}");
@@ -99,25 +92,10 @@ class SendOtpJob implements ShouldQueue
      */
     public function failed(?\Throwable $exception): void
     {
-        $this->updateStatus('failed');
-
-        Log::channel('email')->error('💀 OTP job permanently failed', [
+        Log::channel('email')->error('💀 Invitation job permanently failed', [
             'email' => $this->email,
-            'request_id' => $this->requestId,
+            'role' => $this->role,
             'error' => $exception?->getMessage(),
         ]);
-    }
-
-    /**
-     * Update status ใน cache
-     */
-    private function updateStatus(string $status): void
-    {
-        $cacheKey = "otp_status_{$this->requestId}";
-        Cache::put($cacheKey, [
-            'status' => $status,
-            'email' => $this->email,
-            'updated_at' => now()->toIso8601String(),
-        ], now()->addMinutes(10));
     }
 }

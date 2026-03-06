@@ -23,17 +23,17 @@ class BadgingService {
      */
     async setBadge(count) {
         if (!this.isSupported) {
-            console.log('Badging API not supported');
+
             return false;
         }
 
         try {
             if (count > 0) {
                 await navigator.setAppBadge(count);
-                console.log(`Badge set to ${count}`);
+
             } else {
                 await navigator.clearAppBadge();
-                console.log('Badge cleared');
+
             }
             return true;
         } catch (error) {
@@ -52,7 +52,7 @@ class BadgingService {
 
         try {
             await navigator.clearAppBadge();
-            console.log('Badge cleared');
+
             return true;
         } catch (error) {
             console.error('Error clearing badge:', error);

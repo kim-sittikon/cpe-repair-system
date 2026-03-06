@@ -28,3 +28,4 @@ firebase-credentials.json
 *-credentials.json
 *.credentials.json
 /storage/app/*.json
+cpe_repair_database.sql

@@ -11,6 +11,9 @@ export default function Show({ auth, job }) {
     const fileInputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
+    // Lightbox for reference images
+    const [lightboxImage, setLightboxImage] = useState(null);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
     // Auto-hide sidebar on mobile
     const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
 
@@ -239,8 +242,8 @@ export default function Show({ auth, job }) {
                                                         <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
-                                                        {selectedStep.completeDT
-                                                            ? new Date(selectedStep.completeDT).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                        {selectedStep.due_date
+                                                            ? new Date(selectedStep.due_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
                                                             : '-'
                                                         }
                                                     </span>
@@ -265,6 +268,47 @@ export default function Show({ auth, job }) {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* Reference Images from Repair Requests */}
+                                    {(() => {
+                                        const refImages = selectedStep.files?.filter(f => f.repair_file_id && f.repair_file)
+                                            .map(f => ({
+                                                id: f.file_id,
+                                                url: `/storage/${f.repair_file.file_path}`,
+                                                name: f.repair_file.file_path?.split('/').pop() || 'รูปอ้างอิง',
+                                            })) || [];
+                                        if (refImages.length === 0) return null;
+                                        return (
+                                            <div className="p-4 sm:p-6 border-t border-gray-50">
+                                                <h4 className="text-sm sm:text-base font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+                                                    <div className="w-1 h-4 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-full"></div>
+                                                    รูปอ้างอิงจากคำขอแจ้งซ่อม
+                                                    <span className="ml-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg">{refImages.length} รูป</span>
+                                                </h4>
+                                                <div className="flex gap-3 flex-wrap">
+                                                    {refImages.map((img, idx) => (
+                                                        <button
+                                                            key={img.id}
+                                                            type="button"
+                                                            onClick={() => { setLightboxImage(refImages); setLightboxIndex(idx); }}
+                                                            className="relative group overflow-hidden rounded-xl border-2 border-gray-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-lg cursor-pointer"
+                                                        >
+                                                            <img
+                                                                src={img.url}
+                                                                alt={img.name}
+                                                                className="w-24 h-24 sm:w-28 sm:h-28 object-cover group-hover:scale-110 transition-transform duration-300"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                                                                <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                                                </svg>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Action Form - Responsive */}
                                     {(selectedStep.status === 'pending' || selectedStep.status === 'in_progress') && isMyStep(selectedStep) && (
@@ -448,6 +492,76 @@ export default function Show({ auth, job }) {
                     </div>
                 </div>
             </div>
+
+            {/* Fullscreen Image Lightbox */}
+            {lightboxImage && lightboxImage.length > 0 && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center backdrop-blur-sm"
+                    onClick={() => setLightboxImage(null)}
+                >
+                    {/* Close button */}
+                    <button
+                        onClick={() => setLightboxImage(null)}
+                        className="absolute top-4 right-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                    >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* Image counter */}
+                    <div className="absolute top-4 left-4 z-10 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium">
+                        {lightboxIndex + 1} / {lightboxImage.length}
+                    </div>
+
+                    {/* Previous button */}
+                    {lightboxImage.length > 1 && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev) => (prev === 0 ? lightboxImage.length - 1 : prev - 1)); }}
+                            className="absolute left-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                        >
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                    )}
+
+                    {/* Main Image */}
+                    <img
+                        src={lightboxImage[lightboxIndex]?.url}
+                        alt={`รูปภาพ ${lightboxIndex + 1}`}
+                        className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+
+                    {/* Next button */}
+                    {lightboxImage.length > 1 && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev) => (prev === lightboxImage.length - 1 ? 0 : prev + 1)); }}
+                            className="absolute right-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                        >
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    )}
+
+                    {/* Thumbnail strip */}
+                    {lightboxImage.length > 1 && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                            {lightboxImage.map((img, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                                    className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${idx === lightboxIndex ? 'border-orange-500 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                >
+                                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

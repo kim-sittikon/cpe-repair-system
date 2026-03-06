@@ -8,21 +8,20 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Job สำหรับส่ง OTP Email แบบ Async ผ่าน Brevo HTTP API
+ * Job สำหรับส่ง Password Reset Email แบบ Async ผ่าน Brevo HTTP API
  * 
  * ⚡ Enterprise-Grade Features:
  * - ใช้ HTTP API (port 443) ไม่โดน block
  * - Response เร็ว ~200ms (เทียบกับ SMTP 2-3s)
  * - Built-in retry ใน BrevoService
- * - Priority Queue: otp-high
+ * - Priority Queue: otp-high (ใช้ร่วมกับ OTP)
  * 
  * @see App\Services\BrevoService
  */
-class SendOtpJob implements ShouldQueue
+class SendPasswordResetJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -46,8 +45,7 @@ class SendOtpJob implements ShouldQueue
      */
     public function __construct(
         public string $email,
-        public string $otp,
-        public string $requestId
+        public string $resetUrl
     ) {
         $this->onQueue('otp-high');
     }
@@ -57,37 +55,27 @@ class SendOtpJob implements ShouldQueue
      */
     public function handle(BrevoService $brevoService): void
     {
-        Log::channel('email')->info('🚀 OTP job started (Brevo API)', [
+        Log::channel('email')->info('🔐 Password reset job started (Brevo API)', [
             'email' => $this->email,
-            'request_id' => $this->requestId,
             'attempt' => $this->attempts(),
         ]);
 
-        // ส่ง OTP ผ่าน Brevo HTTP API
-        $response = $brevoService->sendOtpEmail($this->email, $this->otp);
+        // ส่ง Password Reset ผ่าน Brevo HTTP API
+        $response = $brevoService->sendPasswordResetEmail($this->email, $this->resetUrl);
 
         if ($response->success) {
-            $this->updateStatus('sent');
-
-            Log::channel('email')->info('✅ OTP sent via Brevo API', [
+            Log::channel('email')->info('✅ Password reset email sent via Brevo API', [
                 'email' => $this->email,
-                'request_id' => $this->requestId,
                 'message_id' => $response->messageId,
                 'duration_ms' => $response->durationMs,
             ]);
         } else {
-            Log::channel('email')->error('❌ OTP job failed (Brevo API)', [
+            Log::channel('email')->error('❌ Password reset job failed (Brevo API)', [
                 'email' => $this->email,
-                'request_id' => $this->requestId,
                 'attempt' => $this->attempts(),
                 'error' => $response->error,
                 'duration_ms' => $response->durationMs,
             ]);
-
-            // ถ้าเป็น attempt สุดท้าย ให้ mark เป็น failed
-            if ($this->attempts() >= $this->tries) {
-                $this->updateStatus('failed');
-            }
 
             // Throw exception เพื่อให้ queue retry
             throw new \Exception("Brevo API failed: {$response->error}");
@@ -99,25 +87,9 @@ class SendOtpJob implements ShouldQueue
      */
     public function failed(?\Throwable $exception): void
     {
-        $this->updateStatus('failed');
-
-        Log::channel('email')->error('💀 OTP job permanently failed', [
+        Log::channel('email')->error('💀 Password reset job permanently failed', [
             'email' => $this->email,
-            'request_id' => $this->requestId,
             'error' => $exception?->getMessage(),
         ]);
-    }
-
-    /**
-     * Update status ใน cache
-     */
-    private function updateStatus(string $status): void
-    {
-        $cacheKey = "otp_status_{$this->requestId}";
-        Cache::put($cacheKey, [
-            'status' => $status,
-            'email' => $this->email,
-            'updated_at' => now()->toIso8601String(),
-        ], now()->addMinutes(10));
     }
 }

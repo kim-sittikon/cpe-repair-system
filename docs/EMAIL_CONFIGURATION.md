@@ -1,54 +1,38 @@
 # 📧 คู่มือการตั้งค่าระบบส่ง Email - CPE Repair System
 
+> อัปเดตล่าสุด: 2026-02-04
+
 ## 🎯 สถานะปัจจุบัน
 
 | รายการ | สถานะ |
 |--------|-------|
-| **Provider** | Brevo (ฟรี) |
+| **Provider** | Brevo HTTP API |
+| **Method** | HTTP API (port 443) |
 | **Free Quota** | 300 emails/วัน |
 | **Deliverability** | 99% |
-| **Queue System** | ✅ พร้อมใช้งาน |
+| **Queue System** | ✅ Redis + Supervisor |
+
+> ⚠️ **สำคัญ:** ระบบใช้ **Brevo HTTP API** ไม่ใช่ SMTP เพราะ server block SMTP ports
 
 ---
 
-## 🚀 Quick Setup (3 ขั้นตอน)
-
-### Step 1: สมัคร Brevo
-1. ไปที่ [brevo.com](https://www.brevo.com)
-2. สมัครบัญชีฟรี (ใช้ email มหาวิทยาลัยได้)
-3. ยืนยัน email
-
-### Step 2: Get SMTP Credentials
-1. Login เข้า Brevo Dashboard
-2. ไปที่ **Settings** (⚙️) → **SMTP & API**
-3. Copy ค่า:
-   - **SMTP Server:** `smtp-relay.brevo.com`
-   - **Port:** `587`
-   - **Login:** (email ที่สมัคร)
-   - **SMTP Key:** (กด Generate ถ้ายังไม่มี)
-
-### Step 3: อัพเดต .env
+## 🔧 Environment Configuration (.env)
 
 ```env
-# แก้ไขส่วน Email ใน .env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp-relay.brevo.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@example.com
-MAIL_PASSWORD=YOUR_BREVO_SMTP_KEY
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@cperepair.app"
+# Laravel Mail (fallback - ไม่ได้ใช้จริง)
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="no-reply@cperepair.app"
 MAIL_FROM_NAME="CPE Service System"
 
-# เปิดใช้ Queue
-QUEUE_CONNECTION=database
+# ⚡ Brevo HTTP API (ใช้จริง)
+BREVO_KEY=xkeysib-your-api-key-here
+
+# Queue
+QUEUE_CONNECTION=redis
 ```
 
-```bash
-# Clear cache และ start queue worker
-docker compose exec laravel.test php artisan config:clear
-docker compose exec laravel.test php artisan queue:work --queue=emails &
-```
+> ❌ **อย่าใช้** `MAIL_MAILER=brevo` เพราะ Laravel ไม่รู้จัก mailer นี้  
+> ✅ **ใช้** `MAIL_MAILER=log` แทน เพราะเราใช้ Brevo HTTP API โดยตรง
 
 ---
 
@@ -56,52 +40,166 @@ docker compose exec laravel.test php artisan queue:work --queue=emails &
 
 | ไฟล์ | หน้าที่ |
 |------|--------|
+| `app/Services/BrevoService.php` | 🌟 Brevo HTTP API client |
 | `app/Services/EmailService.php` | ศูนย์กลางการส่ง email |
-| `app/Jobs/SendEmailJob.php` | Queue job พร้อม retry |
-| `.env.brevo.example` | Template config สำหรับ Brevo |
+| `app/Jobs/SendOtpJob.php` | ส่ง OTP |
+| `app/Jobs/SendPasswordResetJob.php` | ส่ง Password Reset |
+| `app/Jobs/SendInvitationJob.php` | ส่ง Invitation |
+| `app/Jobs/SendEmailJob.php` | ส่ง General Email |
+| `config/brevo.php` | Brevo config |
 
 ---
 
-## 🔧 การใช้งาน EmailService
+## 🔧 การใช้งาน
 
+### ส่ง OTP (async)
 ```php
 use App\Services\EmailService;
 
-// ส่ง OTP (sync - ทันที)
-EmailService::sendOtp($email, $otp);
+$requestId = EmailService::sendOtpAsync($email, $otp);
+```
 
-// ส่ง Invitation (async - queue)
+### ส่ง Invitation (async)
+```php
+use App\Services\EmailService;
+
 EmailService::sendInvitation($email, $url, $role);
 ```
 
----
+### ส่ง General Email (async)
+```php
+use App\Services\EmailService;
 
-## 📊 ดู Email Logs
+EmailService::sendQueued($to, $subject, $htmlContent, 'email-type', ['tag1', 'tag2']);
+```
 
-```bash
-docker compose exec laravel.test tail -f storage/logs/email.log
+### ส่งผ่าน BrevoService โดยตรง
+```php
+$brevoService = app(\App\Services\BrevoService::class);
+
+// OTP
+$response = $brevoService->sendOtpEmail($email, $otp);
+
+// Password Reset
+$response = $brevoService->sendPasswordResetEmail($email, $resetUrl);
+
+// Invitation
+$response = $brevoService->sendInvitationEmail($email, $inviteUrl, $role);
+
+// Custom Email
+$response = $brevoService->sendTransactionalEmail([
+    'to' => [['email' => $email]],
+    'subject' => 'Test',
+    'htmlContent' => '<h1>Hello</h1>',
+    'tags' => ['test'],
+]);
+
+if ($response->success) {
+    echo "Sent! Message ID: {$response->messageId}";
+} else {
+    echo "Failed: {$response->error}";
+}
 ```
 
 ---
 
-## 🧪 ทดสอบส่ง Email
+## 🚀 Production Setup (Supervisor)
+
+### Config: `/etc/supervisor/conf.d/cpe-worker.conf`
+
+```ini
+[program:cpe-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/cpe-repair-system/artisan queue:work --queue=otp-high,default,emails --sleep=2 --tries=3 --timeout=120 --max-time=3600
+autostart=true
+autorestart=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/cpe-repair-system/storage/logs/worker.log
+```
+
+### Commands
 
 ```bash
-docker compose exec laravel.test php artisan tinker --execute="
-\App\Services\EmailService::sendOtp('your-email@mail.rmutt.ac.th', '123456');
-echo 'Test email sent!';
+# ดูสถานะ
+sudo supervisorctl status
+
+# Restart workers
+sudo supervisorctl restart cpe-worker:*
+
+# Reload config
+sudo supervisorctl reread
+sudo supervisorctl update
+```
+
+---
+
+## 📊 ดู Logs
+
+```bash
+# Worker logs
+tail -f storage/logs/worker.log
+
+# Email logs
+tail -f storage/logs/email.log
+
+# Laravel logs
+tail -f storage/logs/laravel.log
+```
+
+---
+
+## 🧪 ทดสอบ
+
+### Test Brevo API Connection
+```bash
+php artisan tinker --execute="
+\$brevo = app(\App\Services\BrevoService::class);
+print_r(\$brevo->testConnection());
 "
 ```
 
+### Check Failed Jobs
+```bash
+php artisan queue:failed
+```
+
+### Clear Failed Jobs
+```bash
+php artisan queue:flush
+```
+
 ---
 
-## ⚡ Optional: เพิ่ม DNS Records (เพิ่ม Deliverability)
+## 🔴 Troubleshooting
 
-ถ้าต้องการ deliverability สูงสุด เพิ่ม DNS ใน Cloudflare:
+### ❌ "Mailer [brevo] is not defined"
+```bash
+# แก้ไข .env
+sed -i 's/MAIL_MAILER=brevo/MAIL_MAILER=log/' .env
+php artisan config:clear && php artisan cache:clear
+```
 
-| Type | Name | Value |
-|------|------|-------|
-| TXT | `@` | `v=spf1 include:sendinblue.com ~all` |
-| TXT | `_dmarc` | `v=DMARC1; p=none;` |
+### ❌ Queue Workers ไม่รัน
+```bash
+sudo supervisorctl start cpe-worker:*
+```
 
-(Brevo จะแจ้ง DKIM ใน Dashboard ถ้าต้องการ)
+### ❌ Redis Connection refused
+```bash
+# ตรวจสอบ Redis
+systemctl status redis-server
+
+# Restart workers
+sudo supervisorctl restart cpe-worker:*
+```
+
+---
+
+## 📖 References
+
+- [Brevo API Documentation](https://developers.brevo.com/reference/sendtransacemail)
+- [Supervisor Documentation](http://supervisord.org/)
+- [Laravel Queues](https://laravel.com/docs/queues)
+

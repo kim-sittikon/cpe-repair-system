@@ -58,26 +58,45 @@ export default function NotificationToggle({ compact = false }) {
             return;
         }
 
-        if (notifStatus.isGranted) {
-            setIsEnabled(true);
-            setStatus('enabled');
-        } else if (notifStatus.isDenied) {
+        if (notifStatus.isDenied) {
             setIsEnabled(false);
             setStatus('denied');
-        } else {
-            setIsEnabled(false);
-            setStatus('disabled');
+            setLoading(false);
+            return;
+        }
+
+        // Check backend status - if user has token saved
+        try {
+            const response = await axios.get('/fcm/status');
+            if (response.data.has_token) {
+                setIsEnabled(true);
+                setStatus('enabled');
+            } else {
+                setIsEnabled(false);
+                setStatus('disabled');
+            }
+        } catch (err) {
+            // Fallback to browser permission only
+            if (notifStatus.isGranted) {
+                setIsEnabled(false); // Permission granted but no token
+                setStatus('disabled');
+            } else {
+                setIsEnabled(false);
+                setStatus('disabled');
+            }
         }
 
         setLoading(false);
     };
 
+
     const handleToggle = async () => {
         if (loading) return;
 
+        setLoading(true);
+
         if (!isEnabled) {
             // Try to enable notifications
-            setLoading(true);
             try {
                 const token = await requestNotificationPermission();
 
@@ -86,6 +105,7 @@ export default function NotificationToggle({ compact = false }) {
                     await axios.post('/fcm/token', { token });
                     setIsEnabled(true);
                     setStatus('enabled');
+                    console.log('FCM token saved successfully');
                     // Notify other components
                     window.dispatchEvent(new CustomEvent('notificationStatusChanged'));
                 } else {
@@ -101,18 +121,24 @@ export default function NotificationToggle({ compact = false }) {
             } catch (err) {
                 console.error('Error enabling notifications:', err);
                 setIsEnabled(false);
-            } finally {
-                setLoading(false);
             }
         } else {
-            // Can't really "disable" push notifications programmatically
-            // Just show info that user needs to do it in browser settings
+            // Disable notifications - remove token from backend
+            try {
+                await axios.delete('/fcm/token');
+                console.log('FCM token removed from backend');
+            } catch (err) {
+                console.error('Error removing token:', err);
+            }
             setStatus('disabled');
             setIsEnabled(false);
             // Notify other components
             window.dispatchEvent(new CustomEvent('notificationStatusChanged'));
         }
+
+        setLoading(false);
     };
+
 
     // Don't render if unsupported
     if (status === 'unsupported') {

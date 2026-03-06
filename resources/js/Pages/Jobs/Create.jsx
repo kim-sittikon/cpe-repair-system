@@ -84,10 +84,32 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
     // Submit form
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validate repair selection
         if (data.repair_ids.length === 0) {
             alert('กรุณาเลือกรายการแจ้งซ่อมอย่างน้อย 1 รายการ');
             return;
         }
+
+        // Validate job name
+        if (!data.name || data.name.trim() === '') {
+            alert('กรุณากรอกชื่อใบงาน');
+            return;
+        }
+
+        // Validate steps
+        for (let i = 0; i < data.steps.length; i++) {
+            const step = data.steps[i];
+            if (!step.step_name || step.step_name.trim() === '') {
+                alert(`กรุณากรอกชื่อขั้นตอนที่ ${i + 1}`);
+                return;
+            }
+            if (!step.action || !['act', 'app'].includes(step.action)) {
+                alert(`กรุณาเลือกประเภทสำหรับขั้นตอนที่ ${i + 1}`);
+                return;
+            }
+        }
+
         post(route('repairs.jobs.store'));
     };
 
@@ -372,7 +394,6 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                                 onChange={(e) => updateStep(index, 'action', e.target.value)}
                                                                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all cursor-pointer"
                                                             >
-                                                                <option value="">เลือกประเภท</option>
                                                                 <option value="act">🔧 ดำเนินการ</option>
                                                                 <option value="app">✅ อนุมัติ</option>
                                                             </select>
@@ -451,8 +472,8 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                                             type="button"
                                                                             onClick={() => toggleFileAttachment(index, img.id)}
                                                                             className={`relative group overflow-hidden rounded-lg border-2 transition-all ${isSelected
-                                                                                    ? 'border-orange-500 ring-2 ring-orange-200 shadow-lg'
-                                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                                                ? 'border-orange-500 ring-2 ring-orange-200 shadow-lg'
+                                                                                : 'border-gray-200 hover:border-gray-300'
                                                                                 }`}
                                                                         >
                                                                             <img
@@ -462,8 +483,8 @@ export default function Create({ auth, repairs, assignees, selectedIds }) {
                                                                             />
                                                                             {/* Overlay with source info */}
                                                                             <div className={`absolute inset-0 flex items-center justify-center transition-all ${isSelected
-                                                                                    ? 'bg-orange-500/30'
-                                                                                    : 'bg-black/0 group-hover:bg-black/10'
+                                                                                ? 'bg-orange-500/30'
+                                                                                : 'bg-black/0 group-hover:bg-black/10'
                                                                                 }`}>
                                                                                 {isSelected && (
                                                                                     <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

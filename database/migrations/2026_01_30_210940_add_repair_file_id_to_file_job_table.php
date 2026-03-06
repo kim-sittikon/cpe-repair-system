@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('file_job', function (Blueprint $table) {
-            //
+            $table->unsignedBigInteger('repair_file_id')->nullable()->after('jobstep_id');
+            $table->foreign('repair_file_id')->references('file_id')->on('file_repair')->onDelete('set null');
         });
     }
 
@@ -22,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('file_job', function (Blueprint $table) {
-            //
+            $table->dropForeign(['repair_file_id']);
+            $table->dropColumn('repair_file_id');
         });
     }
 };

@@ -59,7 +59,9 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         
         <!-- Preload Critical Images (LCP Optimization) -->
+        @if(in_array($page['component'], ['Welcome', 'Report/Create']))
         <link rel="preload" as="image" href="/images/landing-bg-final.webp" fetchpriority="high">
+        @endif
         <link rel="preload" as="image" href="/images/rmutt-logo.webp">
 
         <!-- Scripts -->

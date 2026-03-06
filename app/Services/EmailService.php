@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Jobs\SendEmailJob;
 use App\Mail\OtpMail;
 use App\Mail\UserInvitationMail;
-use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -58,18 +57,30 @@ class EmailService
     }
 
     /**
-     * ส่ง email แบบ async ผ่าน queue
+     * ส่ง email แบบ async ผ่าน queue (Brevo HTTP API)
      * 
      * ✅ แนะนำสำหรับ email ทั่วไป - ไม่ block request
      * จะ retry อัตโนมัติถ้าล้มเหลว
+     * 
+     * @param string $to Email ผู้รับ
+     * @param string $subject หัวข้ออีเมล
+     * @param string $htmlContent HTML content ของอีเมล
+     * @param string|null $emailType ประเภทอีเมล (สำหรับ logging)
+     * @param array $tags Tags สำหรับ Brevo
      */
-    public static function sendQueued(string $to, Mailable $mailable, ?string $emailType = null): void
-    {
-        SendEmailJob::dispatch($to, $mailable, $emailType);
+    public static function sendQueued(
+        string $to, 
+        string $subject, 
+        string $htmlContent, 
+        ?string $emailType = null,
+        array $tags = []
+    ): void {
+        SendEmailJob::dispatch($to, $subject, $htmlContent, $emailType ?? 'general', $tags);
         
-        Log::channel('email')->debug('📤 Email queued', [
+        Log::channel('email')->debug('📤 Email queued (Brevo API)', [
             'to' => $to,
-            'type' => $emailType ?? class_basename($mailable),
+            'subject' => $subject,
+            'type' => $emailType ?? 'general',
         ]);
     }
 
@@ -83,6 +94,8 @@ class EmailService
      * @param string $email Email ผู้รับ
      * @param string $otp รหัส OTP
      * @return bool สำเร็จหรือไม่
+     * 
+     * @deprecated ใช้ sendOtpViaApi() แทน เพราะ SMTP port ถูก block
      */
     public static function sendOtp(string $email, string $otp): bool
     {
@@ -90,7 +103,27 @@ class EmailService
     }
 
     /**
-     * ส่ง Invitation email (queued - ไม่เร่งด่วน)
+     * ส่ง OTP email ผ่าน Brevo HTTP API (แนะนำ)
+     * 
+     * ✅ ใช้ HTTP API port 443 ไม่โดน block
+     * ⚡ เร็วกว่า SMTP (~200ms vs 2-3 วินาที)
+     * 
+     * @param string $email Email ผู้รับ
+     * @param string $otp รหัส OTP
+     * @return bool สำเร็จหรือไม่
+     */
+    public static function sendOtpViaApi(string $email, string $otp): bool
+    {
+        $brevoService = app(\App\Services\BrevoService::class);
+        $response = $brevoService->sendOtpEmail($email, $otp);
+        return $response->success;
+    }
+
+    /**
+     * ส่ง Invitation email ผ่าน Brevo HTTP API (queued)
+     * 
+     * ✅ ใช้ HTTP API port 443 ไม่โดน block
+     * ⚡ เร็วกว่า SMTP (~200ms vs 2-3 วินาที)
      * 
      * @param string $email Email ผู้รับ
      * @param string $url URL สำหรับ activate account
@@ -98,7 +131,12 @@ class EmailService
      */
     public static function sendInvitation(string $email, string $url, string $role): void
     {
-        self::sendQueued($email, new UserInvitationMail($url, $role), 'invitation');
+        \App\Jobs\SendInvitationJob::dispatch($email, $url, $role);
+        
+        Log::channel('email')->debug('📤 Invitation email queued (Brevo API)', [
+            'to' => $email,
+            'role' => $role,
+        ]);
     }
 
     // ========================================

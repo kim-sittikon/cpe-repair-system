@@ -149,20 +149,44 @@ export default function Navbar() {
                     {/* Right Side: Desktop Menu & Profile */}
                     <div className="hidden lg:flex items-center gap-8 ml-auto">
 
-                        {/* 1. Universal Dropdown: แจ้งปัญหา */}
-                        <div className="relative group">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <NavDropdownTrigger label="แจ้งปัญหา" />
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="64">
-                                    <DropdownHeader>เมนูทั่วไป</DropdownHeader>
-                                    <Dropdown.Link href="/dashboard">หน้าแรก</Dropdown.Link>
-                                    <Dropdown.Link href={route('report.create')}>ฟอร์มแจ้งปัญหา</Dropdown.Link>
-                                    <Dropdown.Link href={route('report.history')}>ประวัติการแจ้ง</Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
-                        </div>
+                        {/* 1. Universal Menu: แจ้งปัญหา */}
+                        {/* สำหรับนักศึกษาที่ไม่มีกลุ่มงานใดๆ แสดงเมนูแบบ Links ปกติ */}
+                        {user.role === 'student' && !user.job_admin && !user.job_repair && !user.job_complaint ? (
+                            <>
+                                <Link
+                                    href="/dashboard"
+                                    className="text-[15px] font-medium text-white hover:text-orange-100 transition ease-in-out duration-150 font-sans tracking-wide"
+                                >
+                                    หน้าแรก
+                                </Link>
+                                <Link
+                                    href={route('report.create')}
+                                    className="text-[15px] font-medium text-white hover:text-orange-100 transition ease-in-out duration-150 font-sans tracking-wide"
+                                >
+                                    ฟอร์มแจ้งปัญหา
+                                </Link>
+                                <Link
+                                    href={route('report.history')}
+                                    className="text-[15px] font-medium text-white hover:text-orange-100 transition ease-in-out duration-150 font-sans tracking-wide"
+                                >
+                                    ประวัติการแจ้ง
+                                </Link>
+                            </>
+                        ) : (
+                            <div className="relative group">
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <NavDropdownTrigger label="แจ้งปัญหา" />
+                                    </Dropdown.Trigger>
+                                    <Dropdown.Content width="64">
+                                        <DropdownHeader>เมนูทั่วไป</DropdownHeader>
+                                        <Dropdown.Link href="/dashboard">หน้าแรก</Dropdown.Link>
+                                        <Dropdown.Link href={route('report.create')}>ฟอร์มแจ้งปัญหา</Dropdown.Link>
+                                        <Dropdown.Link href={route('report.history')}>ประวัติการแจ้ง</Dropdown.Link>
+                                    </Dropdown.Content>
+                                </Dropdown>
+                            </div>
+                        )}
 
                         {/* 2. Repair Group (Conditional) */}
                         {user.job_repair && user.role !== 'student' && (
@@ -361,25 +385,40 @@ export default function Navbar() {
                     {/* Scrollable Menu Content */}
                     <div className="overflow-y-auto h-[calc(100%-180px)]">
                         {/* แจ้งปัญหา Section */}
-                        <CollapsibleSection
-                            title="แจ้งปัญหา"
-                            sectionKey="report"
-                            icon={
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            }
-                        >
-                            <MobileNavLink href="/dashboard">
-                                หน้าแรก
-                            </MobileNavLink>
-                            <MobileNavLink href={route('report.create')}>
-                                ฟอร์มแจ้งปัญหา
-                            </MobileNavLink>
-                            <MobileNavLink href={route('report.history')}>
-                                ประวัติการแจ้ง
-                            </MobileNavLink>
-                        </CollapsibleSection>
+                        {/* สำหรับนักศึกษาที่ไม่มีกลุ่มงานใดๆ แสดงเมนูแบบ Links ตรงๆ */}
+                        {user.role === 'student' && !user.job_admin && !user.job_repair && !user.job_complaint ? (
+                            <div className="border-b border-gray-100 py-2">
+                                <MobileNavLink href="/dashboard">
+                                    หน้าแรก
+                                </MobileNavLink>
+                                <MobileNavLink href={route('report.create')}>
+                                    ฟอร์มแจ้งปัญหา
+                                </MobileNavLink>
+                                <MobileNavLink href={route('report.history')}>
+                                    ประวัติการแจ้ง
+                                </MobileNavLink>
+                            </div>
+                        ) : (
+                            <CollapsibleSection
+                                title="แจ้งปัญหา"
+                                sectionKey="report"
+                                icon={
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                }
+                            >
+                                <MobileNavLink href="/dashboard">
+                                    หน้าแรก
+                                </MobileNavLink>
+                                <MobileNavLink href={route('report.create')}>
+                                    ฟอร์มแจ้งปัญหา
+                                </MobileNavLink>
+                                <MobileNavLink href={route('report.history')}>
+                                    ประวัติการแจ้ง
+                                </MobileNavLink>
+                            </CollapsibleSection>
+                        )}
 
                         {/* เมนูช่าง Section */}
                         {user.job_repair && user.role !== 'student' && (

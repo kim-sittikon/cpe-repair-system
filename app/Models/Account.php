@@ -19,7 +19,14 @@ class Account extends Authenticatable
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+        // Build reset URL with token and email
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ], false));
+        
+        // 🚀 Dispatch to queue (otp-high priority) - reliable delivery with retry
+        \App\Jobs\SendPasswordResetJob::dispatch($this->email, $resetUrl);
     }
 
     /**

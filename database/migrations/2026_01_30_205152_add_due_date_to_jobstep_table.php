@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('jobstep', function (Blueprint $table) {
-            //
+            $table->date('due_date')->nullable()->after('completeDT');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('jobstep', function (Blueprint $table) {
-            //
+            $table->dropColumn('due_date');
         });
     }
 };

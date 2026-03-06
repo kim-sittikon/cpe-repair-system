@@ -275,8 +275,9 @@ export default function BottomNavbar() {
         return colors[mode]?.[type] || colors.general[type];
     };
 
-    // Current mode config
-    const currentConfig = modeConfigs[currentMode] || modeConfigs.general;
+    // Current mode config - students always use general mode
+    const effectiveMode = isStudent ? 'general' : currentMode;
+    const currentConfig = modeConfigs[effectiveMode] || modeConfigs.general;
     const navItems = currentConfig.items;
 
     // Available modes for switching

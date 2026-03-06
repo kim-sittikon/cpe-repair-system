@@ -2,7 +2,7 @@
 
 **ระบบส่ง Email - CPE Repair System**
 
-> อัปเดตล่าสุด: 2026-02-01
+> อัปเดตล่าสุด: 2026-02-04
 
 ---
 
@@ -10,12 +10,20 @@
 
 | Component | Technology | Status |
 |-----------|------------|--------|
-| **SMTP Provider** | Brevo (Sendinblue) | ✅ Active |
-| **SMTP Host** | `smtp-relay.brevo.com:587` | ✅ |
-| **Encryption** | TLS | ✅ |
+| **Email API** | Brevo HTTP API (port 443) | ✅ Active |
+| **Fallback** | SMTP blocked (port 25/465/587) | ❌ ไม่ใช้ |
 | **Sender** | `no-reply@cperepair.app` | ✅ Verified |
-| **Queue System** | Laravel Queue (Database driver) | ✅ |
-| **Worker** | Docker container (auto-start) | ✅ |
+| **Queue System** | Laravel Queue (Redis) | ✅ |
+| **Worker** | Supervisor (auto-start) | ✅ |
+
+---
+
+## ⚡ สำคัญ: Brevo HTTP API
+
+> **เหตุผลที่ใช้ HTTP API แทน SMTP:**
+> - Server block SMTP ports (25, 465, 587)
+> - HTTP API ใช้ port 443 (HTTPS) ไม่ถูก block
+> - เร็วกว่า SMTP (~200ms vs 2-3s)
 
 ---
 
@@ -33,14 +41,14 @@
 
 ---
 
-## 📬 Email Types
+## 📬 Email Jobs (ทั้งหมดใช้ Brevo HTTP API)
 
-| Email | Method | File | Speed |
-|-------|--------|------|-------|
-| **OTP (สมัครสมาชิก)** | Queue ✅ | `SendOtpJob.php` | ทันที (async) |
-| **Password Reset** | Queue ✅ | `ResetPasswordNotification.php` | ทันที |
-| **User Invitation** | Queue | `UserInvitationMail.php` | ทันที |
-| **Keyword Alert** | Queue | `KeywordDetectedNotification.php` | ทันที |
+| Email | Job | Queue | Status |
+|-------|-----|-------|--------|
+| **OTP (สมัครสมาชิก)** | `SendOtpJob` | `otp-high` | ✅ Brevo API |
+| **Password Reset** | `SendPasswordResetJob` | `otp-high` | ✅ Brevo API |
+| **User Invitation** | `SendInvitationJob` | `default` | ✅ Brevo API |
+| **General Email** | `SendEmailJob` | `emails` | ✅ Brevo API |
 
 ---
 
@@ -48,109 +56,96 @@
 
 ```
 app/
-├── Mail/
-│   ├── OtpMail.php              # OTP email template
-│   └── UserInvitationMail.php   # Invitation (queue)
-├── Notifications/
-│   ├── ResetPasswordNotification.php    # Reset password (queue)
-│   ├── KeywordDetectedNotification.php  # Keyword alert
-│   └── PersonalKeywordDetectedNotification.php
 ├── Services/
+│   ├── BrevoService.php         # 🌟 Brevo HTTP API client
 │   └── EmailService.php         # Central email service
 └── Jobs/
-    ├── SendEmailJob.php         # General queue job
-    └── SendOtpJob.php           # 🆕 Async OTP job
-
-resources/views/emails/
-└── otp.blade.php                # OTP email template (custom HTML)
+    ├── SendOtpJob.php           # OTP via Brevo API
+    ├── SendPasswordResetJob.php # Password reset via Brevo API
+    ├── SendInvitationJob.php    # Invitation via Brevo API
+    └── SendEmailJob.php         # General email via Brevo API
 
 config/
-└── mail.php                     # Mail configuration
+├── mail.php                     # Laravel Mail config (fallback)
+└── brevo.php                    # Brevo API config
 
-storage/logs/
-└── email-*.log                  # Email logs
+resources/views/emails/
+├── otp.blade.php                # OTP template
+├── password-reset.blade.php     # Password reset template
+└── invitation-html.blade.php    # Invitation template
 ```
 
 ---
 
-## 🚀 Async OTP System (2026-02-01)
+## ⚡ Queue Worker Configuration (Production)
 
-### Features
+### Supervisor Config (`/etc/supervisor/conf.d/cpe-worker.conf`)
 
-| Feature | Description |
-|---------|-------------|
-| ✅ **Async Sending** | ส่ง OTP ผ่าน Queue ไม่ block request |
-| ✅ **Polling UI** | Frontend poll status ทุก 800ms |
-| ✅ **Rate Limiting** | 60 วินาที cooldown ต่อ email |
-| ✅ **Status Tracking** | pending → sent / failed |
-| ✅ **Security Binding** | requestId ผูกกับ email |
-| ✅ **Retry 3x** | Backoff: 5s, 10s, 30s |
-
-### New Files
-
-| File | Description |
-|------|-------------|
-| `app/Jobs/SendOtpJob.php` | Queue job with retry logic |
-| `routes/web.php` → `/otp-status/{id}` | Status check endpoint |
-
-### Modified Files
-
-| File | Changes |
-|------|---------|
-| `app/Services/EmailService.php` | + `sendOtpAsync()`, `getOtpStatus()`, `canSendOtp()` |
-| `app/Http/Controllers/Auth/RegisteredUserController.php` | ใช้ async + rate limit |
-| `resources/js/Pages/Auth/Register.jsx` | Polling UI + status colors |
-| `compose.yaml` | เพิ่ม `otp-high` queue |
-
-### Logs
-
-```log
-[15:26:19] 📨 OTP requested {"email":"test@mail.rmutt.ac.th","request_id":"..."}
-[15:26:19] 🚀 OTP job started {attempt:1}
-[15:26:20] ✅ OTP sent successfully {duration_ms: 583}
+```ini
+[program:cpe-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/cpe-repair-system/artisan queue:work --queue=otp-high,default,emails --sleep=2 --tries=3 --timeout=120 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stopwaitsecs=3600
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/cpe-repair-system/storage/logs/worker.log
 ```
 
----
-
-## ⚡ Queue Worker Configuration
-
-### Docker Compose (Auto-start)
-
-```yaml
-queue-worker:
-    restart: always
-    image: sail-8.5/app
-    entrypoint: ["php", "/var/www/html/artisan", "queue:work", 
-                 "--queue=otp-high,default,emails", "--sleep=3", "--tries=3"]
-    depends_on:
-        - laravel.test
-        - mysql
-        - redis
-```
-
-### Manual (Development)
-
-```bash
-docker compose exec laravel.test php artisan queue:work --queue=default,emails &
-```
+### Queue Priority Order
+1. `otp-high` - OTP และ Password Reset (ความสำคัญสูงสุด)
+2. `default` - Invitation และงานทั่วไป
+3. `emails` - General emails
 
 ---
 
 ## 🔧 Environment Configuration (.env)
 
 ```env
-# Email (Brevo SMTP)
-MAIL_MAILER=smtp
-MAIL_HOST=smtp-relay.brevo.com
-MAIL_PORT=587
-MAIL_USERNAME=your-brevo-email@smtp-brevo.com
-MAIL_PASSWORD=xsmtpsib-your-key
-MAIL_ENCRYPTION=tls
+# Mail (fallback - ไม่ได้ใช้จริง เพราะใช้ Brevo API)
+MAIL_MAILER=log
 MAIL_FROM_ADDRESS="no-reply@cperepair.app"
 MAIL_FROM_NAME="CPE Service System"
 
-# Queue (for email)
-QUEUE_CONNECTION=database
+# Brevo HTTP API (ใช้จริง)
+BREVO_KEY=xkeysib-your-api-key
+
+# Queue (Redis)
+QUEUE_CONNECTION=redis
+```
+
+> ⚠️ **สำคัญ:** `MAIL_MAILER=log` ไม่ใช่ `brevo` เพราะระบบใช้ Brevo HTTP API โดยตรงผ่าน `BrevoService`
+
+---
+
+## 🚀 System Boot - Auto-Start Services
+
+หลังเปิดเครื่อง services ต่อไปนี้จะ start อัตโนมัติ:
+
+| Service | Command | Status |
+|---------|---------|--------|
+| Nginx | `systemctl` | ✅ enabled |
+| MySQL | `systemctl` | ✅ enabled |
+| PHP-FPM | `systemctl` | ✅ enabled |
+| Redis | `systemctl` | ✅ enabled |
+| Supervisor | `systemctl` | ✅ enabled |
+| Queue Workers | via Supervisor | ✅ 2 processes |
+
+### ตรวจสอบสถานะ
+
+```bash
+# Check services
+systemctl is-active nginx mysql php8.2-fpm redis-server supervisor
+
+# Check queue workers
+sudo supervisorctl status
+
+# Check worker processes
+ps aux | grep "queue:work"
 ```
 
 ---
@@ -159,48 +154,40 @@ QUEUE_CONNECTION=database
 
 | Date | Improvement | Impact |
 |------|-------------|--------|
+| 2026-02-04 | **SendEmailJob ใช้ Brevo API** | All jobs use HTTP API |
+| 2026-02-04 | **Fix MAIL_MAILER config** | ป้องกัน "Mailer [brevo] not defined" |
+| 2026-02-04 | **Supervisor auto-start** | Workers รันอัตโนมัติหลัง reboot |
+| 2026-02-04 | **SendPasswordResetJob** | Password reset ผ่าน Brevo API |
+| 2026-02-04 | **SendInvitationJob** | Invitation ผ่าน Brevo API |
+| 2026-02-02 | **Brevo HTTP API Integration** | ส่ง email ได้แม้ SMTP ถูก block |
 | 2026-02-01 | **Async OTP with Polling** | กดปุ๊บเห็นทันที + polling status |
-| 2026-02-01 | Queue Password Reset | กดปุ๊บเห็นข้อความทันที |
-| 2026-02-01 | Auto-start Queue Worker | รันอัตโนมัติพร้อม Docker |
-| 2026-01-31 | Brevo SMTP Integration | 99% deliverability |
 | 2026-01-31 | DNS Authentication (SPF/DKIM/DMARC) | ป้องกัน spam |
-
----
-
-## 🚧 Pending Improvements
-
-| Priority | Improvement | Effort | Benefit |
-|----------|-------------|--------|---------|
-| 🟢 LOW | Custom Reset Password template | 2 hrs | Branding สม่ำเสมอ |
-| ⚪ OPTIONAL | Dedicated IP (Brevo) | $12/mo | Deliverability สูงขึ้น |
 
 ---
 
 ## 🧪 Testing & Monitoring
 
-### Test Email Configuration
+### Test Brevo API Connection
 ```bash
-docker compose exec laravel.test php artisan tinker --execute="
-print_r(\App\Services\EmailService::getConfigSummary());
+php artisan tinker --execute="
+\$brevo = app(\App\Services\BrevoService::class);
+print_r(\$brevo->testConnection());
 "
 ```
 
 ### Check Queue Status
 ```bash
-docker compose exec laravel.test php artisan tinker --execute="
-echo 'Pending: ' . DB::table('jobs')->count();
-echo ', Failed: ' . DB::table('failed_jobs')->count();
-"
+php artisan queue:failed
+```
+
+### View Worker Logs
+```bash
+tail -f storage/logs/worker.log
 ```
 
 ### View Email Logs
 ```bash
-docker compose exec laravel.test tail -f storage/logs/email-*.log
-```
-
-### View Queue Worker Logs
-```bash
-docker compose logs queue-worker --tail 20
+tail -f storage/logs/email.log
 ```
 
 ---
@@ -213,8 +200,37 @@ docker compose logs queue-worker --tail 20
 
 ---
 
+## 🔴 Troubleshooting
+
+### ปัญหา: "Mailer [brevo] is not defined"
+**สาเหตุ:** `.env` ตั้ง `MAIL_MAILER=brevo` แต่ไม่มี config ใน `mail.php`
+**แก้ไข:** 
+```bash
+sed -i 's/MAIL_MAILER=brevo/MAIL_MAILER=log/' .env
+php artisan config:clear && php artisan cache:clear
+```
+
+### ปัญหา: Email ไม่ส่ง หลัง reboot
+**สาเหตุ:** Queue workers ไม่ start
+**ตรวจสอบ:**
+```bash
+sudo supervisorctl status
+# ถ้าไม่รัน:
+sudo supervisorctl start cpe-worker:*
+```
+
+### ปัญหา: Redis Connection refused
+**สาเหตุ:** Redis ยังไม่พร้อมตอน boot
+**แก้ไข:** รอสักครู่หรือ restart workers
+```bash
+sudo supervisorctl restart cpe-worker:*
+```
+
+---
+
 ## 📖 References
 
-- [Brevo Documentation](https://developers.brevo.com/)
-- [Laravel Mail](https://laravel.com/docs/mail)
+- [Brevo API Documentation](https://developers.brevo.com/reference/sendtransacemail)
 - [Laravel Queues](https://laravel.com/docs/queues)
+- [Supervisor Documentation](http://supervisord.org/)
+

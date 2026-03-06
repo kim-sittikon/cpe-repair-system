@@ -375,50 +375,12 @@ export default function Register() {
 
         try {
             const response = await axios.post(route('send-otp'), { email: data.email });
-            const requestId = response.data.request_id;
-            setOtpRequestId(requestId);
 
-            // Start polling for status (800ms interval, 30s timeout)
-            let attempts = 0;
-            const maxAttempts = 38; // ~30 seconds at 800ms interval
-
-            const pollInterval = setInterval(async () => {
-                attempts++;
-
-                try {
-                    const statusResponse = await axios.get(`/otp-status/${requestId}?email=${encodeURIComponent(data.email)}`);
-                    const status = statusResponse.data.status;
-
-                    if (status === 'sent') {
-                        clearInterval(pollInterval);
-                        setOtpStatus('sent');
-                        setOtpMessage('✅ ส่งรหัส OTP เรียบร้อยแล้ว (กรุณาตรวจสอบ Inbox หรือ Junk/Spam)');
-                        setTimer(60);
-                        setIsOtpSending(false);
-                    } else if (status === 'failed') {
-                        clearInterval(pollInterval);
-                        setOtpStatus('failed');
-                        setOtpMessage('❌ ส่ง OTP ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
-                        setIsOtpSending(false);
-                    } else if (attempts >= maxAttempts) {
-                        // Timeout - graceful message
-                        clearInterval(pollInterval);
-                        setOtpStatus('timeout');
-                        setOtpMessage('⏳ กรุณาตรวจสอบอีเมลของคุณ หรือกดส่งใหม่หากยังไม่ได้รับ');
-                        setTimer(60);
-                        setIsOtpSending(false);
-                    }
-                } catch (pollError) {
-                    // Continue polling on error
-                    if (attempts >= maxAttempts) {
-                        clearInterval(pollInterval);
-                        setOtpStatus('timeout');
-                        setOtpMessage('⏳ กรุณาตรวจสอบอีเมลของคุณ หรือกดส่งใหม่หากยังไม่ได้รับ');
-                        setTimer(60);
-                        setIsOtpSending(false);
-                    }
-                }
-            }, 800);
+            // ✅ Instant response - ไม่ต้อง poll เพราะ backend dispatch แล้ว
+            setOtpStatus('sent');
+            setOtpMessage('✅ รหัส OTP กำลังถูกส่งไปยังอีเมลของคุณ (กรุณาตรวจสอบภายใน 30 วินาที รวมถึงโฟลเดอร์ Junk/Spam)');
+            setTimer(60);
+            setIsOtpSending(false);
 
         } catch (error) {
             setIsOtpSending(false);
@@ -631,10 +593,10 @@ export default function Register() {
                                 </div>
                                 {otpMessage && (
                                     <p className={`text-sm mt-1 flex items-center gap-1 ${otpStatus === 'sent' ? 'text-green-600' :
-                                            otpStatus === 'failed' ? 'text-red-600' :
-                                                otpStatus === 'timeout' ? 'text-orange-600' :
-                                                    otpStatus === 'pending' ? 'text-blue-600' :
-                                                        'text-gray-600'
+                                        otpStatus === 'failed' ? 'text-red-600' :
+                                            otpStatus === 'timeout' ? 'text-orange-600' :
+                                                otpStatus === 'pending' ? 'text-blue-600' :
+                                                    'text-gray-600'
                                         }`}>
                                         {otpStatus === 'pending' && (
                                             <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
