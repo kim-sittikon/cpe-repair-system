@@ -150,6 +150,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/announcements/create', [\App\Http\Controllers\AnnouncementController::class, 'create'])->name('announcements.create');
     Route::post('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'store'])->name('announcements.store');
     Route::delete('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+    Route::post('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'update'])->name('announcements.update');
     // Personal Keywords CRUD
     Route::name('keywords.personal.')->group(function () {
         Route::post('/keywords/personal', [\App\Http\Controllers\PersonalKeywordController::class, 'store'])->name('store');

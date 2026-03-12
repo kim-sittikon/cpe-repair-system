@@ -1,8 +1,15 @@
-# Docker Compose Override for Laravel Sail
-# Auto-restart all services when Docker starts
+# =====================================================
+# Docker Compose Override for Local Development
+# =====================================================
+# ไฟล์นี้ merge กับ compose.yaml อัตโนมัติ
+# ตั้ง restart policy ให้ทุก service
+# =====================================================
 
 services:
   laravel.test:
+    restart: unless-stopped
+
+  queue-worker:
     restart: unless-stopped
 
   mysql:
@@ -12,7 +19,4 @@ services:
     restart: unless-stopped
 
   mailpit:
-    restart: unless-stopped
-
-  cloudflared:
     restart: unless-stopped

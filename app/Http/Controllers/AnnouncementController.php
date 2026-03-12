@@ -54,19 +54,18 @@ class AnnouncementController extends Controller
      */
     public function create()
     {
-        $latestAnnouncements = Announcement::latest()
-            ->take(10)
-            ->get()
-            ->map(function ($news) {
-                return [
-                    'id' => $news->announcement_id,
-                    'title' => $news->title,
-                    'detail' => $news->detail,
-                    'is_urgent' => $news->is_urgent,
-                    'image' => $news->file, // Make sure 'file' is the correct column name for image path
-                    'created_at' => $news->created_at,
-                ];
-            });
+        $latestAnnouncements = Announcement::latest()->paginate(10)->through(function ($news) {
+            return [
+                'id' => $news->announcement_id,
+                'title' => $news->title,
+                'detail' => $news->detail,
+                'is_urgent' => $news->is_urgent,
+                'image' => $news->file,
+                'building_id' => $news->building_id,
+                'room_id' => $news->room_id,
+                'created_at' => $news->created_at,
+            ];
+        });
 
         // Get buildings with their rooms for location selector
         $buildings = Building::with('rooms')->get()->map(function ($building) {
@@ -96,7 +95,7 @@ class AnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'detail' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB Max (Backend Validation)
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
             'is_urgent' => 'boolean',
             'building_id' => 'nullable|exists:building,building_id',
             'room_id' => 'nullable|exists:room,room_id',
@@ -137,6 +136,54 @@ class AnnouncementController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'ประกาศข่าวเรียบร้อยแล้ว');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'detail' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'is_urgent' => 'boolean',
+            'building_id' => 'nullable|exists:building,building_id',
+            'room_id' => 'nullable|exists:room,room_id',
+        ]);
+
+        $announcement = Announcement::findOrFail($id);
+        $isUrgent = $request->boolean('is_urgent');
+
+        // --- URGENT LIMIT LOGIC (Auto-Downgrade) ---
+        if ($isUrgent && !$announcement->is_urgent) {
+            $urgentCount = Announcement::where('is_urgent', true)->count();
+            if ($urgentCount >= 7) {
+                $oldestUrgent = Announcement::where('is_urgent', true)
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+                if ($oldestUrgent) {
+                    $oldestUrgent->update(['is_urgent' => false]);
+                }
+            }
+        }
+
+        // --- IMAGE UPLOAD ---
+        $updateData = [
+            'title' => $request->title,
+            'detail' => $request->detail,
+            'is_urgent' => $isUrgent,
+            'building_id' => $request->building_id,
+            'room_id' => $request->room_id,
+        ];
+
+        if ($request->hasFile('image')) {
+            $updateData['file'] = $this->uploadImage($request->file('image'), 'uploads/announcements');
+        }
+
+        $announcement->update($updateData);
+
+        return redirect()->back()->with('success', 'แก้ไขประกาศเรียบร้อยแล้ว');
     }
 
     /**

@@ -47,7 +47,7 @@ export default function Authenticated({ user, header, children }) {
 
             {/* Footer (Global) - Always at bottom, hidden on mobile when bottom nav is visible */}
             <footer className="hidden lg:block bg-[#4a4a4a] text-white py-4 text-center text-sm font-light tracking-wide">
-                © 2025 Department of Computer Engineering, RMUTT. All rights reserved
+                © 2025 ภาควิศวกรรมคอมพิวเตอร์ มทร.ธัญบุรี สงวนลิขสิทธิ์
             </footer>
 
             {/* Bottom Navigation for Mobile */}

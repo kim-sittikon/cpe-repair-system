@@ -67,7 +67,7 @@ export default function Index({ auth, repairs, filters }) {
     // Check if any selected item is processing (cannot create job for processing items)
     const hasSelectedProcessing = selectedItems.some(id => {
         const repair = repairs.data.find(r => r.numeric_id === id);
-        return repair && repair.raw_status === 'processing';
+        return repair && (repair.raw_status === 'processing' || repair.raw_status === 'accepted');
     });
 
     // Check if can create job (has selection AND no processing items)
@@ -128,6 +128,12 @@ export default function Index({ auth, repairs, filters }) {
                 break;
             case 'เสร็จสิ้น':
                 bgColor = 'bg-emerald-50'; textColor = 'text-emerald-600'; dotColor = 'bg-emerald-500';
+                break;
+            case 'รับเรื่อง':
+                bgColor = 'bg-emerald-50'; textColor = 'text-emerald-600'; dotColor = 'bg-emerald-500';
+                break;
+            case 'ปฏิเสธการดำเนินการ':
+                bgColor = 'bg-red-50'; textColor = 'text-red-600'; dotColor = 'bg-red-500';
                 break;
             case 'ยกเลิก':
                 bgColor = 'bg-red-50'; textColor = 'text-red-600'; dotColor = 'bg-red-400';
@@ -254,8 +260,9 @@ export default function Index({ auth, repairs, filters }) {
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
                                 >
                                     <option value="pending">🕐 รอดำเนินการ</option>
-                                    <option value="processing">🔄 กำลังดำเนินการ</option>
-                                    <option value="finished">✅ เสร็จสิ้น</option>
+                                    <option value="accepted">✅ รับเรื่อง</option>
+                                    <option value="rejected">❌ ปฏิเสธการดำเนินการ</option>
+                                    <option value="finished">🏁 เสร็จสิ้น</option>
                                     <option value="all">📁 ทั้งหมด</option>
                                 </select>
                             </div>
@@ -336,8 +343,9 @@ export default function Index({ auth, repairs, filters }) {
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
                                 >
                                     <option value="pending">🕐 รอดำเนินการ</option>
-                                    <option value="processing">🔄 กำลังดำเนินการ</option>
-                                    <option value="finished">✅ ดำเนินการเสร็จสิ้น</option>
+                                    <option value="accepted">✅ รับเรื่อง</option>
+                                    <option value="rejected">❌ ปฏิเสธการดำเนินการ</option>
+                                    <option value="finished">🏁 ดำเนินการเสร็จสิ้น</option>
                                     <option value="all">📁 รายการทั้งหมด</option>
                                 </select>
                             </div>
@@ -351,7 +359,7 @@ export default function Index({ auth, repairs, filters }) {
                                 <div
                                     key={item.numeric_id}
                                     onClick={() => {
-                                        if (item.raw_status !== 'finished' && item.raw_status !== 'completed') {
+                                        if (item.raw_status !== 'finished' && item.raw_status !== 'completed' && item.raw_status !== 'rejected') {
                                             toggleSelect(item.numeric_id);
                                         }
                                     }}
@@ -366,7 +374,7 @@ export default function Index({ auth, repairs, filters }) {
                                     <div className="flex items-start gap-4">
                                         {/* Checkbox/Checkmark */}
                                         <div className="pt-0.5 flex-shrink-0">
-                                            {item.raw_status !== 'finished' && item.raw_status !== 'completed' ? (
+                                            {item.raw_status !== 'finished' && item.raw_status !== 'completed' && item.raw_status !== 'rejected' ? (
                                                 <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer
                                                     ${selectedItems.includes(item.numeric_id)
                                                         ? 'bg-orange-500 border-orange-500'
@@ -517,7 +525,7 @@ export default function Index({ auth, repairs, filters }) {
                                                     }`}
                                             >
                                                 <td className="px-2 py-3">
-                                                    {item.raw_status !== 'finished' && item.raw_status !== 'completed' ? (
+                                                    {item.raw_status !== 'finished' && item.raw_status !== 'completed' && item.raw_status !== 'rejected' ? (
                                                         <div
                                                             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer
                                                                 ${selectedItems.includes(item.numeric_id)

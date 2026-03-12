@@ -123,7 +123,7 @@ export default function LandingPage({ urgentNews, generalNews }) {
                             </h1>
 
                             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-light text-white/90 tracking-wide">
-                                Computer Engineering Issue Reporting
+                                ระบบรับเรื่องแจ้งปัญหา
                             </h2>
                         </div>
 

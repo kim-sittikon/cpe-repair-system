@@ -140,19 +140,19 @@ export default function UserList({ activeUsers, pendingUsers }) {
                                             <button
                                                 onClick={() => { setFilterType('role:student'); setShowFilterDropdown(false); }}
                                                 className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${filterType === 'role:student' ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}`}
-                                            >Student</button>
+                                            >นักศึกษา</button>
                                             <button
                                                 onClick={() => { setFilterType('role:teacher'); setShowFilterDropdown(false); }}
                                                 className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${filterType === 'role:teacher' ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}`}
-                                            >Teacher</button>
+                                            >อาจารย์</button>
                                             <button
                                                 onClick={() => { setFilterType('role:staff'); setShowFilterDropdown(false); }}
                                                 className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${filterType === 'role:staff' ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}`}
-                                            >Staff</button>
+                                            >เจ้าหน้าที่</button>
                                             <button
                                                 onClick={() => { setFilterType('role:admin'); setShowFilterDropdown(false); }}
                                                 className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${filterType === 'role:admin' ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}`}
-                                            >Admin</button>
+                                            >ผู้ดูแลระบบ</button>
                                         </div>
                                     </div>
                                 )}
@@ -164,18 +164,18 @@ export default function UserList({ activeUsers, pendingUsers }) {
                                 onChange={(e) => setFilterType(e.target.value)}
                                 className="hidden sm:block w-auto px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 bg-white"
                             >
-                                <option value="all">ทั้งหมด (All Users)</option>
-                                <optgroup label="สถานะ (Status)">
+                                <option value="all">ทั้งหมด</option>
+                                <optgroup label="สถานะ">
                                     <option value="status:active">ใช้งานปกติ</option>
                                     <option value="status:suspended">บัญชีที่โดนระงับ</option>
                                 </optgroup>
-                                <optgroup label="บทบาท (Role)">
-                                    <option value="role:student">Student</option>
-                                    <option value="role:teacher">Teacher</option>
-                                    <option value="role:staff">Staff</option>
-                                    <option value="role:admin">Admin</option>
+                                <optgroup label="บทบาท">
+                                    <option value="role:student">นักศึกษา</option>
+                                    <option value="role:teacher">อาจารย์</option>
+                                    <option value="role:staff">เจ้าหน้าที่</option>
+                                    <option value="role:admin">ผู้ดูแลระบบ</option>
                                 </optgroup>
-                                <optgroup label="กลุ่มงาน (Work Group)">
+                                <optgroup label="กลุ่มงาน">
                                     <option value="job:repair">กลุ่มงานแจ้งซ่อม</option>
                                     <option value="job:complaint">กลุ่มงานร้องเรียน</option>
                                     <option value="job:admin">ผู้ดูแลระบบ</option>
@@ -252,16 +252,16 @@ export default function UserList({ activeUsers, pendingUsers }) {
                                         {activeTab === 'active' ? (
                                             user.status === 'suspended' ? (
                                                 <span className="inline-flex items-center gap-1 text-red-600 bg-red-50 px-2 py-0.5 rounded text-xs font-medium">
-                                                    <XCircle className="w-3 h-3" /> Suspended
+                                                    <XCircle className="w-3 h-3" /> ถูกระงับ
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded text-xs font-medium">
-                                                    <CheckCircle className="w-3 h-3" /> Active
+                                                    <CheckCircle className="w-3 h-3" /> ใช้งาน
                                                 </span>
                                             )
                                         ) : (
                                             <span className="inline-flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded text-xs font-medium">
-                                                <Clock className="w-3 h-3" /> Pending
+                                                <Clock className="w-3 h-3" /> รอดำเนินการ
                                             </span>
                                         )}
                                     </div>
@@ -411,16 +411,16 @@ export default function UserList({ activeUsers, pendingUsers }) {
                                                 {activeTab === 'active' ? (
                                                     user.status === 'suspended' ? (
                                                         <span className="inline-flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded text-xs font-semibold">
-                                                            <XCircle className="w-3 h-3" /> Suspended
+                                                            <XCircle className="w-3 h-3" /> ถูกระงับ
                                                         </span>
                                                     ) : (
                                                         <span className="inline-flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-semibold">
-                                                            <CheckCircle className="w-3 h-3" /> Active
+                                                            <CheckCircle className="w-3 h-3" /> ใช้งาน
                                                         </span>
                                                     )
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-1 rounded text-xs font-semibold">
-                                                        <Clock className="w-3 h-3" /> Pending
+                                                        <Clock className="w-3 h-3" /> รอดำเนินการ
                                                     </span>
                                                 )}
                                             </td>

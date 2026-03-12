@@ -72,8 +72,8 @@ export default function PrivacyPolicy() {
                                         <button
                                             onClick={() => scrollToSection(section.id)}
                                             className={`w-full text-left text-sm py-2 px-3 rounded-lg transition-all ${activeSection === section.id
-                                                    ? 'bg-orange-50 text-orange-600 font-medium'
-                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                ? 'bg-orange-50 text-orange-600 font-medium'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                                 }`}
                                         >
                                             {section.title}
@@ -97,7 +97,7 @@ export default function PrivacyPolicy() {
                                     </div>
                                     <div>
                                         <h1 className="text-3xl font-extrabold">นโยบายความเป็นส่วนตัว</h1>
-                                        <p className="text-white/80 mt-1">Privacy Policy</p>
+                                        <p className="text-white/80 mt-1">นโยบายความเป็นส่วนตัว</p>
                                     </div>
                                 </div>
                                 <p className="text-white/90 text-sm leading-relaxed">

@@ -65,12 +65,7 @@ export default function ResetPassword({ token, email }) {
                     </div>
 
                     <div className="relative space-y-1">
-                        <div className="flex justify-between items-center">
-                            <InputLabel htmlFor="password" value="รหัสผ่านใหม่" className="text-gray-700 font-medium" />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-xs text-[#E11D48] hover:text-[#BE123C] font-semibold flex items-center gap-1 transition-colors">
-                                {showPassword ? "ซ่อน" : "แสดง"}
-                            </button>
-                        </div>
+                        <InputLabel htmlFor="password" value="รหัสผ่านใหม่" className="text-gray-700 font-medium" />
                         <TextInput
                             id="password"
                             type={showPassword ? "text" : "password"}
@@ -82,6 +77,17 @@ export default function ResetPassword({ token, email }) {
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
+                        >
+                            {showPassword ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" /><path d="m2 2 20 20" /></svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+                            )}
+                        </button>
                         <InputError message={errors.password} className="mt-2" />
                     </div>
 
@@ -102,8 +108,11 @@ export default function ResetPassword({ token, email }) {
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
                         >
-                            {/* Simple eye icon */}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+                            {showConfirmPassword ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" /><path d="m2 2 20 20" /></svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+                            )}
                         </button>
                         <InputError message={errors.password_confirmation} className="mt-2" />
                     </div>

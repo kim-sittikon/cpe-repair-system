@@ -46,7 +46,7 @@ export default function PersonalIndex({ auth, personalKeywords = [], globalKeywo
         const delayDebounceFn = setTimeout(() => {
             // Only fetch if searchTerm changed from initial or current
             router.get(
-                route(isRepair ? 'repair.keywords' : 'complaints.keywords'),
+                route(isRepair ? 'repairs.keywords' : 'complaints.keywords'),
                 { search: searchTerm },
                 {
                     preserveState: true,
@@ -164,7 +164,7 @@ export default function PersonalIndex({ auth, personalKeywords = [], globalKeywo
                                         รายการคีย์เวิร์ดกลาง
                                     </h2>
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-gray-200 text-gray-600">
-                                        แบบร่าง (Read Only)
+                                        อ่านอย่างเดียว
                                     </span>
                                 </div>
                                 <div className='relative'>

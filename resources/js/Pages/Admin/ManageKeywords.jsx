@@ -111,8 +111,8 @@ export default function ManageKeywords({ auth, keywords = [] }) {
                                     required
                                 >
                                     <option value="">เลือกประเภทกลุ่มงาน</option>
-                                    <option value="repair">กลุ่มงานแจ้งซ่อม (Repair)</option>
-                                    <option value="complaint">กลุ่มงานร้องเรียน (Complaint)</option>
+                                    <option value="repair">กลุ่มงานแจ้งซ่อม</option>
+                                    <option value="complaint">กลุ่มงานร้องเรียน</option>
                                 </select>
                                 {form.errors.type && (
                                     <p className="mt-1 text-sm text-red-600">{form.errors.type}</p>
@@ -223,7 +223,7 @@ export default function ManageKeywords({ auth, keywords = [] }) {
                                                             : 'bg-gray-100 text-gray-600'
                                                             }`}
                                                     >
-                                                        {keyword.scope === 'global' ? '🌐 Global' : '👤 Personal'}
+                                                        {keyword.scope === 'global' ? '🌐 ส่วนกลาง' : '👤 ส่วนตัว'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -294,14 +294,14 @@ export default function ManageKeywords({ auth, keywords = [] }) {
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
                                         required
                                     >
-                                        <option value="repair">กลุ่มงานแจ้งซ่อม (Repair)</option>
-                                        <option value="complaint">กลุ่มงานร้องเรียน (Complaint)</option>
+                                        <option value="repair">กลุ่มงานแจ้งซ่อม</option>
+                                        <option value="complaint">กลุ่มงานร้องเรียน</option>
                                     </select>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        ขอบเขต (Scope)
+                                        ขอบเขต
                                     </label>
                                     <select
                                         value={editForm.data.scope}
@@ -309,8 +309,8 @@ export default function ManageKeywords({ auth, keywords = [] }) {
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
                                         required
                                     >
-                                        <option value="personal">ส่วนตัว (Personal)</option>
-                                        <option value="global">ส่วนกลาง (Global)</option>
+                                        <option value="personal">ส่วนตัว</option>
+                                        <option value="global">ส่วนกลาง</option>
                                     </select>
                                 </div>
 

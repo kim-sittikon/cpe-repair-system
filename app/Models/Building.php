@@ -18,6 +18,14 @@ class Building extends Model
     ];
 
     /**
+     * Relationship: A building belongs to an account (creator)
+     */
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'account_id');
+    }
+
+    /**
      * Relationship: A building has many rooms
      */
     public function rooms()

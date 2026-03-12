@@ -66,12 +66,14 @@ class RepairController extends Controller
             ->toArray();
 
         $pending = $statusCounts['pending'] ?? 0;
-        $processing = ($statusCounts['processing'] ?? 0) + ($statusCounts['in_progress'] ?? 0);
+        $accepted = ($statusCounts['accepted'] ?? 0) + ($statusCounts['processing'] ?? 0) + ($statusCounts['in_progress'] ?? 0);
+        $rejected = $statusCounts['rejected'] ?? 0;
         $finished = ($statusCounts['finished'] ?? 0) + ($statusCounts['completed'] ?? 0);
 
         $statusPieData = [
             ['name' => 'รอรับเรื่อง', 'value' => $pending, 'color' => '#3B82F6'],
-            ['name' => 'กำลังดำเนินการ', 'value' => $processing, 'color' => '#F59E0B'],
+            ['name' => 'รับเรื่อง', 'value' => $accepted, 'color' => '#F59E0B'],
+            ['name' => 'ปฏิเสธการดำเนินการ', 'value' => $rejected, 'color' => '#EF4444'],
             ['name' => 'เสร็จสิ้น', 'value' => $finished, 'color' => '#10B981'],
         ];
 
@@ -245,10 +247,18 @@ class RepairController extends Controller
                 ];
             });
 
-        $statusOptions = [
-            ['value' => 'processing', 'label' => 'กำลังดำเนินการ'],
-            ['value' => 'finished', 'label' => 'ดำเนินการเสร็จสิ้น'],
-        ];
+        // Determine status options based on current repair status
+        $currentStatus = $repairs->first()['status'] ?? 'pending';
+        if ($currentStatus === 'pending') {
+            $statusOptions = [
+                ['value' => 'accepted', 'label' => 'รับเรื่อง'],
+                ['value' => 'rejected', 'label' => 'ปฏิเสธการดำเนินการ'],
+            ];
+        } else {
+            $statusOptions = [
+                ['value' => 'finished', 'label' => 'ดำเนินการเสร็จสิ้น'],
+            ];
+        }
 
         return Inertia::render('Repair/Status', [
             'repairs' => $repairs,
@@ -264,14 +274,14 @@ class RepairController extends Controller
         $rules = [
             'ids' => 'required|array|min:1',
             'ids.*' => 'required|integer',
-            'status' => 'required|in:processing,finished',
+            'status' => 'required|in:accepted,rejected,finished',
         ];
 
         // If finishing, require completion notes
         if ($request->status === 'finished') {
             $rules['completion_notes'] = 'required|string|min:10';
             $rules['completion_images'] = 'nullable|array|max:5';
-            $rules['completion_images.*'] = 'image|mimes:jpeg,png,jpg,gif,webp|max:5120';
+            $rules['completion_images.*'] = 'image|mimes:jpeg,png,jpg|max:5120';
         }
 
         $validated = $request->validate($rules, [
@@ -382,6 +392,10 @@ class RepairController extends Controller
         switch ($status) {
             case 'pending':
                 return 'รอดำเนินการ';
+            case 'accepted':
+                return 'รับเรื่อง';
+            case 'rejected':
+                return 'ปฏิเสธการดำเนินการ';
             case 'processing':
                 return 'กำลังดำเนินการ';
             case 'in_progress':

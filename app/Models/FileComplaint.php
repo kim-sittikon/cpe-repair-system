@@ -12,7 +12,7 @@ class FileComplaint extends Model
 
     public function request()
     {
-        return $this->belongsTo(RequestComplaint::class, 'complaint_id');
+        return $this->belongsTo(RequestComplaint::class, 'complaint_id'); //"ไฟล์นี้ สังกัดอยู่กับ คำร้องร้องเรียน ไหน?"
     }
 
 }

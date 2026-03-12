@@ -40,7 +40,7 @@ export default function AdminDashboard({ auth, stats, chartData_activity, chartD
         if (active && payload && payload.length) {
             return (
                 <div className="bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200">
-                    <p className="font-semibold text-gray-800">{payload[0].value} activities</p>
+                    <p className="font-semibold text-gray-800">{payload[0].value} กิจกรรม</p>
                 </div>
             );
         }
@@ -49,7 +49,7 @@ export default function AdminDashboard({ auth, stats, chartData_activity, chartD
 
     return (
         <AuthenticatedLayout user={auth.user}>
-            <Head title="Admin Dashboard" />
+            <Head title="แดชบอร์ดผู้ดูแลระบบ" />
 
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 font-['K2D']">
                 <div className="px-6 lg:px-8">
@@ -284,7 +284,7 @@ export default function AdminDashboard({ auth, stats, chartData_activity, chartD
                                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
                                                             {activity.actor_name ? activity.actor_name.charAt(0).toUpperCase() : '?'}
                                                         </div>
-                                                        <span className="font-medium text-gray-700">{activity.actor_name || 'Unknown'}</span>
+                                                        <span className="font-medium text-gray-700">{activity.actor_name || 'ไม่ทราบ'}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">

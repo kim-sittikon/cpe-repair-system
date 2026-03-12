@@ -11,15 +11,15 @@
     <table width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;margin:0 auto;">
         <tr>
             <td style="background:linear-gradient(135deg,#e11d48,#be123c);padding:24px;text-align:center;border-radius:12px 12px 0 0;">
-                <h1 style="margin:0;color:#fff;font-size:20px;">🔐 CPE Repair System</h1>
+                <h1 style="margin:0;color:#1a1a2e;font-size:22px;font-weight:700;">🔐 CPE Repair System</h1>
             </td>
         </tr>
         <tr>
             <td style="background:#fff;padding:32px;text-align:center;border-radius:0 0 12px 12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
                 <p style="margin:0 0 20px;color:#64748b;font-size:15px;">คุณได้รับอีเมลนี้เพราะมีคำขอรีเซ็ตรหัสผ่าน</p>
                 
-                <a href="{{ $resetUrl }}" style="display:inline-block;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;padding:14px 32px;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;margin:16px 0;">
-                    ตั้งรหัสผ่านใหม่
+                <a href="{{ $resetUrl }}" style="display:inline-block;background:#1e3a5f;color:#ffffff;padding:16px 40px;font-size:16px;font-weight:700;text-decoration:none;border-radius:8px;margin:16px 0;border:2px solid #152d4a;letter-spacing:0.5px;">
+                    🔑 ตั้งรหัสผ่านใหม่
                 </a>
                 
                 <p style="margin:20px 0 0;padding:12px;background:#fef3c7;border-radius:8px;color:#92400e;font-size:13px;">

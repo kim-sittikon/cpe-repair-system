@@ -140,7 +140,7 @@ export default function Navbar() {
                                     ระบบรับเรื่องแจ้งปัญหา
                                 </span>
                                 <span className="hidden lg:block text-orange-50 text-xs lg:text-sm font-light tracking-wider opacity-95">
-                                    ภาควิศวกรรมคอมพิวเตอร์ (Computer Engineering Issue Reporting System)
+                                    ภาควิศวกรรมคอมพิวเตอร์ (ระบบรับเรื่องแจ้งปัญหา)
                                 </span>
                             </div>
                         </Link>
@@ -199,7 +199,7 @@ export default function Navbar() {
                                         <DropdownHeader>เมนูช่าง</DropdownHeader>
                                         <Dropdown.Link href={route('repairs.dashboard')}>หน้าหลัก</Dropdown.Link>
                                         <Dropdown.Link href={route('repairs.index')}>รายการแจ้งซ่อม</Dropdown.Link>
-                                        <Dropdown.Link href="/announcements/create">สร้างข่าวสาร/ลบบบ</Dropdown.Link>
+                                        <Dropdown.Link href="/announcements/create">สร้างข่าวสาร/ลบ</Dropdown.Link>
                                         <div className="border-t border-gray-100 my-1"></div>
                                         <Dropdown.Link href={route('repairs.jobs.index')}>ใบงานรวม</Dropdown.Link>
                                         <Dropdown.Link href={route('repairs.jobs.my')}>ใบงานของฉัน</Dropdown.Link>
@@ -242,7 +242,7 @@ export default function Navbar() {
                                         <Dropdown.Link href="/admin/users">จัดการผู้ใช้งาน</Dropdown.Link>
                                         <Dropdown.Link href={route('admin.users.invite')}>สร้างผู้ใช้งาน</Dropdown.Link>
                                         <div className="border-t border-gray-100 my-1"></div>
-                                        <Dropdown.Link href="/admin/locations">แเพิ่มอาคาร/ห้อง</Dropdown.Link>
+                                        <Dropdown.Link href="/admin/locations">เพิ่มอาคาร/ห้อง</Dropdown.Link>
                                         <Dropdown.Link href="/admin/keywords">จัดการคีย์เวิร์ด</Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>

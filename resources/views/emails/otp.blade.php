@@ -11,7 +11,7 @@
     <table width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;margin:0 auto;">
         <tr>
             <td style="background:linear-gradient(135deg,#e11d48,#be123c);padding:24px;text-align:center;border-radius:12px 12px 0 0;">
-                <h1 style="margin:0;color:#fff;font-size:20px;">🔐 CPE Service System</h1>
+                <h1 style="margin:0;color:#1a1a2e;font-size:22px;font-weight:700;">🔐 CPE Service System</h1>
             </td>
         </tr>
         <tr>

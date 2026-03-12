@@ -35,31 +35,31 @@ class Account extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'first_name',
-        'last_name',
-        'email',
-        'password_hash',
-        'role',
-        'otp_code',
-        'otp_expires',
-        'credit',
-        'verified',
-        'status',
-        'job_repair',
-        'job_admin',
-        'job_complaint',
-        'invited_by',
-        'invitation_sent_at',
-        'invitation_expires_at',
-        // Suspension fields
-        'suspended_at',
-        'suspension_type',
-        'suspension_start',
-        'suspension_end',
-        'suspension_reason',
-        'suspended_by',
+        'first_name',     // ชื่อ
+        'last_name',      // นามสกุล
+        'email',          // อีเมล
+        'password_hash',  // รหัสผ่าน
+        'role',           // บทบาท
+        'otp_code',       // รหัส OTP
+        'otp_expires',    // วันหมดอายุ OTP
+        'credit',         // เครดิต
+        'verified',       // สถานะการยืนยัน
+        'status',         // สถานะบัญชี
+        'job_repair',     // งานซ่อม
+        'job_admin',      // งานแอดมิน
+        'job_complaint',  // งานร้องเรียน
+        'invited_by',     // ผู้ที่เชิญ
+        'invitation_sent_at',       // วันที่ส่งคำเชิญ
+        'invitation_expires_at',    // วันหมดอายุคำเชิญ
+        // Suspension fields ระบบระงับบัญชี (4 คอลัมน์)
+        'suspended_at',       // วันที่บัญชีถูกระงับ
+        'suspension_type',    // ประเภทการระงับ (ชั่วคราว/ถาวร)
+        'suspension_start',   // วันที่เริ่มระงับ
+        'suspension_end',     // วันที่สิ้นสุดระงับ
+        'suspension_reason',   // สาเหตุการระงับ
+        'suspended_by',       // ผู้ที่ระงับบัญชี
         // FCM Push Notification fields
-        'fcm_token',
+        'fcm_token', 
         'fcm_token_updated_at',
     ];
 

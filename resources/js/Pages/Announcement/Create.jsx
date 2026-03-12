@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
-import { Camera, Save, ArrowLeft, Info, LayoutTemplate, Eye, AlertCircle, CheckCircle2, PanelRightClose, PanelRightOpen, Image as ImageIcon, X, Trash2, AlertTriangle } from 'lucide-react';
+import { Camera, Save, ArrowLeft, Info, LayoutTemplate, Eye, AlertCircle, CheckCircle2, PanelRightClose, PanelRightOpen, Image as ImageIcon, X, Trash2, AlertTriangle, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Create({ auth, latestAnnouncements, buildings = [] }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -22,10 +22,34 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [deleteModal, setDeleteModal] = useState({ show: false, news: null });
     const [isDeleting, setIsDeleting] = useState(false);
+    const [imageError, setImageError] = useState('');
+    const [editModal, setEditModal] = useState({ show: false, news: null });
+    const [editData, setEditData] = useState({ title: '', detail: '', is_urgent: false, image: null, building_id: '', room_id: '' });
+    const [editPreview, setEditPreview] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editErrors, setEditErrors] = useState({});
+
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Check file type
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                setImageError('รองรับเฉพาะไฟล์ JPG และ PNG เท่านั้น');
+                setTimeout(() => setImageError(''), 5000);
+                e.target.value = '';
+                return;
+            }
+            // Check file size
+            if (file.size > MAX_FILE_SIZE) {
+                setImageError(`ไฟล์เกินขนาด 2MB (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+                setTimeout(() => setImageError(''), 5000);
+                e.target.value = '';
+                return;
+            }
+            setImageError('');
             setData('image', file);
             setPreview(URL.createObjectURL(file));
         }
@@ -60,8 +84,73 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
         });
     };
 
+    // Edit handlers
+    const handleEditClick = (news) => {
+        setEditData({
+            title: news.title,
+            detail: news.detail,
+            is_urgent: news.is_urgent ? true : false,
+            image: null,
+            building_id: news.building_id || '',
+            room_id: news.room_id || '',
+        });
+        setEditPreview(news.image ? `/storage/${news.image}` : null);
+        setEditErrors({});
+        setEditModal({ show: true, news });
+    };
+
+    const handleEditImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                setEditErrors(prev => ({ ...prev, image: 'รองรับเฉพาะไฟล์ JPG และ PNG เท่านั้น' }));
+                e.target.value = '';
+                return;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                setEditErrors(prev => ({ ...prev, image: `ไฟล์เกินขนาด 2MB (${(file.size / 1024 / 1024).toFixed(1)}MB)` }));
+                e.target.value = '';
+                return;
+            }
+            setEditErrors(prev => ({ ...prev, image: '' }));
+            setEditData(prev => ({ ...prev, image: file }));
+            setEditPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const submitEdit = () => {
+        if (!editModal.news) return;
+        setIsEditing(true);
+        const formData = new FormData();
+        formData.append('title', editData.title);
+        formData.append('detail', editData.detail);
+        formData.append('is_urgent', editData.is_urgent ? '1' : '0');
+        if (editData.building_id) formData.append('building_id', editData.building_id);
+        if (editData.room_id) formData.append('room_id', editData.room_id);
+        if (editData.image) formData.append('image', editData.image);
+
+        router.post(route('announcements.update', editModal.news.id), formData, {
+            onSuccess: () => {
+                setEditModal({ show: false, news: null });
+                setIsEditing(false);
+                setEditPreview(null);
+            },
+            onError: (errors) => {
+                setEditErrors(errors);
+                setIsEditing(false);
+            },
+        });
+    };
+
+    const editAvailableRooms = buildings.find(b => b.id == editData.building_id)?.rooms || [];
+
+    // Pagination
+    const announcementsList = latestAnnouncements?.data || latestAnnouncements || [];
+    const paginationMeta = latestAnnouncements?.total ? latestAnnouncements : null;
+    console.log('📋 latestAnnouncements:', JSON.stringify({ total: latestAnnouncements?.total, last_page: latestAnnouncements?.last_page, keys: latestAnnouncements ? Object.keys(latestAnnouncements) : 'null', dataLength: announcementsList?.length, hasPagination: !!paginationMeta }));
+
     // Filter announcements for the "Manage" tab
-    const filteredAnnouncements = latestAnnouncements?.filter(news =>
+    const filteredAnnouncements = announcementsList?.filter(news =>
         news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         news.detail.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
@@ -408,11 +497,11 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                                             </div>
                                                             <div className="text-left">
                                                                 <p className="font-semibold text-gray-700">แนบรูปภาพ</p>
-                                                                <p className="text-xs text-gray-400">PNG, JPG, GIF (สูงสุด 5MB)</p>
+                                                                <p className="text-xs text-gray-400">JPG, PNG (สูงสุด 2MB)</p>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    <input id="file-upload-mobile" name="file-upload-mobile" type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                                    <input id="file-upload-mobile" name="file-upload-mobile" type="file" className="hidden" accept="image/jpeg,image/png" onChange={handleImageChange} />
                                                 </label>
 
                                                 {/* Desktop: Full dropzone style */}
@@ -437,12 +526,12 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                                             <p className="mb-2 text-lg text-gray-600 font-medium">
                                                                 <span className="text-[#F59E0B] border-b-2 border-[#F59E0B]/20 group-hover:border-[#F59E0B]">คลิกเพื่ออัปโหลด</span> หรือลากไฟล์มาวาง
                                                             </p>
-                                                            <p className="text-sm text-gray-400">รองรับไฟล์ SVG, PNG, JPG หรือ GIF (สูงสุด 5MB)</p>
+                                                            <p className="text-sm text-gray-400">รองรับไฟล์ JPG และ PNG (สูงสุด 2MB)</p>
                                                         </div>
                                                     )}
-                                                    <input id="file-upload" name="file-upload" type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                                    <input id="file-upload" name="file-upload" type="file" className="hidden" accept="image/jpeg,image/png" onChange={handleImageChange} />
                                                 </label>
-                                                {errors.image && <p className="text-red-500 text-sm mt-3 text-center flex items-center justify-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.image}</p>}
+                                                {(errors.image || imageError) && <p className="text-red-500 text-sm mt-3 text-center flex items-center justify-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.image || imageError}</p>}
                                             </div>
                                         </div>
 
@@ -472,7 +561,7 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                         <div className="sticky top-24 space-y-4">
                                             <div className="flex items-center gap-2 text-gray-500 mb-2">
                                                 <Eye className="w-4 h-4" />
-                                                <span className="text-sm font-semibold uppercase tracking-wider">Live Preview</span>
+                                                <span className="text-sm font-semibold uppercase tracking-wider">ตัวอย่างแสดงผล</span>
                                             </div>
 
                                             <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden border border-gray-100 ring-4 ring-gray-50/50 transform transition-all hover:scale-[1.02] duration-300">
@@ -542,7 +631,7 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                     <div className="p-4 sm:p-6 border-b border-gray-100 bg-gray-50/50">
                                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
                                             <div>
-                                                <h3 className="font-bold text-base sm:text-lg text-gray-800">รายการประกาศทั้งหมด ({filteredAnnouncements.length})</h3>
+                                                <h3 className="font-bold text-base sm:text-lg text-gray-800">รายการประกาศทั้งหมด ({paginationMeta ? paginationMeta.total : filteredAnnouncements.length})</h3>
                                                 <p className="text-xs text-gray-500 hidden sm:block">จัดการ แก้ไข หรือลบประกาศของคุณ</p>
                                             </div>
 
@@ -616,15 +705,24 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                                                             year: 'numeric'
                                                                         })}
                                                                     </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleDeleteClick(news)}
-                                                                        className="text-red-500 hover:text-white hover:bg-red-500 p-1.5 rounded-lg transition-all border border-red-100 hover:border-red-500"
-                                                                    >
-                                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                        </svg>
-                                                                    </button>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleEditClick(news)}
+                                                                            className="text-blue-500 hover:text-white hover:bg-blue-500 p-1.5 rounded-lg transition-all border border-blue-100 hover:border-blue-500"
+                                                                        >
+                                                                            <Pencil className="w-4 h-4" />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDeleteClick(news)}
+                                                                            className="text-red-500 hover:text-white hover:bg-red-500 p-1.5 rounded-lg transition-all border border-red-100 hover:border-red-500"
+                                                                        >
+                                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -721,16 +819,26 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                                                 })}
                                                             </td>
                                                             <td className="px-6 py-4 text-right align-top pt-5">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleDeleteClick(news)}
-                                                                    className="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-lg transition-all duration-200 border border-red-100 hover:border-red-500 shadow-sm"
-                                                                    title="ลบประกาศ"
-                                                                >
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                    </svg>
-                                                                </button>
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleEditClick(news)}
+                                                                        className="text-blue-500 hover:text-white hover:bg-blue-500 p-2 rounded-lg transition-all duration-200 border border-blue-100 hover:border-blue-500 shadow-sm"
+                                                                        title="แก้ไขประกาศ"
+                                                                    >
+                                                                        <Pencil className="w-5 h-5" />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleDeleteClick(news)}
+                                                                        className="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-lg transition-all duration-200 border border-red-100 hover:border-red-500 shadow-sm"
+                                                                        title="ลบประกาศ"
+                                                                    >
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))
@@ -760,8 +868,47 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                                         </table>
                                     </div>
 
-                                    <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50/30 text-center text-xs text-gray-400">
-                                        แสดงผล {filteredAnnouncements.length} รายการ
+                                    {/* Pagination */}
+                                    <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50/30">
+                                        {paginationMeta && paginationMeta.last_page > 1 ? (
+                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                                <span className="text-xs text-gray-400">
+                                                    แสดง {((paginationMeta.current_page - 1) * paginationMeta.per_page) + 1}-{Math.min(paginationMeta.current_page * paginationMeta.per_page, paginationMeta.total)} จาก {paginationMeta.total} รายการ
+                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => router.get(route('announcements.create'), { page: paginationMeta.current_page - 1 }, { preserveState: true })}
+                                                        disabled={paginationMeta.current_page === 1}
+                                                        className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        <ChevronLeft className="w-4 h-4" />
+                                                    </button>
+                                                    {Array.from({ length: paginationMeta.last_page }, (_, i) => i + 1).map(page => (
+                                                        <button
+                                                            key={page}
+                                                            onClick={() => router.get(route('announcements.create'), { page }, { preserveState: true })}
+                                                            className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${page === paginationMeta.current_page
+                                                                ? 'bg-[#F59E0B] text-white shadow-sm'
+                                                                : 'text-gray-500 hover:bg-gray-100 border border-gray-200'
+                                                                }`}
+                                                        >
+                                                            {page}
+                                                        </button>
+                                                    ))}
+                                                    <button
+                                                        onClick={() => router.get(route('announcements.create'), { page: paginationMeta.current_page + 1 }, { preserveState: true })}
+                                                        disabled={paginationMeta.current_page === paginationMeta.last_page}
+                                                        className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        <ChevronRight className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center text-xs text-gray-400">
+                                                แสดงผล {filteredAnnouncements.length} รายการ
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -769,6 +916,160 @@ export default function Create({ auth, latestAnnouncements, buildings = [] }) {
                     </div>
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            {editModal.show && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !isEditing && setEditModal({ show: false, news: null })} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 animate-in fade-in zoom-in duration-200">
+                        <button
+                            onClick={() => !isEditing && setEditModal({ show: false, news: null })}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                            disabled={isEditing}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+                            <Pencil className="w-5 h-5 text-[#F59E0B]" />
+                            แก้ไขประกาศ
+                        </h3>
+
+                        <div className="space-y-4">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">หัวข้อข่าว <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    value={editData.title}
+                                    onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/10 transition-all text-gray-800"
+                                />
+                                {editErrors.title && <p className="text-red-500 text-xs mt-1">{editErrors.title}</p>}
+                            </div>
+
+                            {/* Detail */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">รายละเอียด <span className="text-red-500">*</span></label>
+                                <textarea
+                                    rows="4"
+                                    value={editData.detail}
+                                    onChange={(e) => setEditData(prev => ({ ...prev, detail: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/10 transition-all text-gray-600 resize-none"
+                                />
+                                {editErrors.detail && <p className="text-red-500 text-xs mt-1">{editErrors.detail}</p>}
+                            </div>
+
+                            {/* Type */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">ประเภท</label>
+                                <div className="flex bg-gray-100 p-1 rounded-xl gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditData(prev => ({ ...prev, is_urgent: false }))}
+                                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${!editData.is_urgent ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
+                                    >
+                                        <CheckCircle2 className={`w-3.5 h-3.5 ${!editData.is_urgent ? 'text-green-500' : 'text-transparent'}`} />
+                                        ทั่วไป
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditData(prev => ({ ...prev, is_urgent: true }))}
+                                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${editData.is_urgent ? 'bg-white text-red-600 shadow-sm' : 'text-gray-400'}`}
+                                    >
+                                        <AlertCircle className={`w-3.5 h-3.5 ${editData.is_urgent ? 'text-red-500' : 'text-transparent'}`} />
+                                        เร่งด่วน
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Location */}
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">อาคาร</label>
+                                    <select
+                                        value={editData.building_id}
+                                        onChange={(e) => setEditData(prev => ({ ...prev, building_id: e.target.value, room_id: '' }))}
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all"
+                                    >
+                                        <option value="">ทุกอาคาร</option>
+                                        {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">ห้อง</label>
+                                    <select
+                                        value={editData.room_id}
+                                        onChange={(e) => setEditData(prev => ({ ...prev, room_id: e.target.value }))}
+                                        disabled={!editData.building_id}
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                    >
+                                        <option value="">ทุกห้อง</option>
+                                        {editAvailableRooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Image */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">รูปภาพ</label>
+                                {editPreview && (
+                                    <div className="relative mb-2 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                                        <img src={editPreview} alt="Preview" className="w-full h-40 object-contain" />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setEditPreview(editModal.news?.image ? `/storage/${editModal.news.image}` : null);
+                                                setEditData(prev => ({ ...prev, image: null }));
+                                            }}
+                                            className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                )}
+                                <label className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-medium cursor-pointer hover:bg-gray-100 transition-colors text-sm">
+                                    <Camera className="w-4 h-4 text-[#F59E0B]" />
+                                    <span>{editPreview ? 'เปลี่ยนรูปภาพ' : 'เลือกรูปภาพ'}</span>
+                                    <input type="file" className="hidden" accept="image/jpeg,image/png" onChange={handleEditImageChange} />
+                                </label>
+                                {editErrors.image && <p className="text-red-500 text-xs mt-1">{editErrors.image}</p>}
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => setEditModal({ show: false, news: null })}
+                                disabled={isEditing}
+                                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                            >
+                                ยกเลิก
+                            </button>
+                            <button
+                                onClick={submitEdit}
+                                disabled={isEditing || !editData.title || !editData.detail}
+                                className="flex-1 px-4 py-3 bg-[#F59E0B] text-white rounded-xl font-medium hover:bg-[#d97706] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isEditing ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        กำลังบันทึก...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4" />
+                                        บันทึก
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx global>{`
                 .pattern-grid {

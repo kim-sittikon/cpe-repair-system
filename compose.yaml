@@ -1,12 +1,21 @@
+# =====================================================
+# 🐳 Docker Compose - Local Development
+# =====================================================
+# ใช้สำหรับรัน local เท่านั้น! ไม่ได้ใช้บน Cloud Server
+# วิธีใช้: ./start-local.sh หรือ docker compose up -d
+# =====================================================
+
 services:
+    # ============================================
+    # 🚀 Laravel Application
+    # ============================================
     laravel.test:
-        restart: always
         build:
-            context: ./vendor/laravel/sail/runtimes/8.5
+            context: ./vendor/laravel/sail/runtimes/8.2
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: sail-8.5/app
+        image: sail-8.2/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -26,42 +35,17 @@ services:
             - mysql
             - redis
             - mailpit
-        deploy:
-            resources:
-                limits:
-                    memory: 1G
-                    cpus: '1.0'
-        logging:
-            driver: json-file
-            options:
-                max-size: "10m"
-                max-file: "3"
-    cloudflared:
-        restart: always
-        image: 'cloudflare/cloudflared:latest'
-        command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-        networks:
-            - sail
-        depends_on:
-            - laravel.test
-        deploy:
-            resources:
-                limits:
-                    memory: 128M
-                    cpus: '0.25'
-        logging:
-            driver: json-file
-            options:
-                max-size: "5m"
-                max-file: "2"
+
+    # ============================================
+    # 📬 Queue Worker
+    # ============================================
     queue-worker:
-        restart: always
         build:
-            context: ./vendor/laravel/sail/runtimes/8.5
+            context: ./vendor/laravel/sail/runtimes/8.2
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: sail-8.5/app
+        image: sail-8.2/app
         entrypoint: ["php", "/var/www/html/artisan", "queue:work", "--queue=otp-high,default,emails", "--sleep=3", "--tries=3", "--max-time=3600"]
         environment:
             WWWUSER: '${WWWUSER}'
@@ -74,19 +58,12 @@ services:
             - laravel.test
             - mysql
             - redis
-        deploy:
-            resources:
-                limits:
-                    memory: 256M
-                    cpus: '0.25'
-        logging:
-            driver: json-file
-            options:
-                max-size: "5m"
-                max-file: "2"
+
+    # ============================================
+    # 🗄️ MySQL Database
+    # ============================================
     mysql:
-        restart: always
-        image: 'mysql:8.4'
+        image: 'mysql:8.0'
         ports:
             - '${FORWARD_DB_PORT:-3306}:3306'
         environment:
@@ -96,10 +73,10 @@ services:
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
             MYSQL_ALLOW_EMPTY_PASSWORD: 1
-            MYSQL_EXTRA_OPTIONS: '${MYSQL_EXTRA_OPTIONS:-}'
         volumes:
             - 'sail-mysql:/var/lib/mysql'
             - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+            - './cpe_repair_database.sql:/docker-entrypoint-initdb.d/20-seed-data.sql'
         networks:
             - sail
         healthcheck:
@@ -110,18 +87,11 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
-        deploy:
-            resources:
-                limits:
-                    memory: 1G
-                    cpus: '0.5'
-        logging:
-            driver: json-file
-            options:
-                max-size: "10m"
-                max-file: "3"
+
+    # ============================================
+    # ⚡ Redis (Cache / Queue / Session)
+    # ============================================
     redis:
-        restart: always
         image: 'redis:alpine'
         ports:
             - '${FORWARD_REDIS_PORT:-6379}:6379'
@@ -136,37 +106,22 @@ services:
                 - ping
             retries: 3
             timeout: 5s
-        deploy:
-            resources:
-                limits:
-                    memory: 256M
-                    cpus: '0.25'
-        logging:
-            driver: json-file
-            options:
-                max-size: "5m"
-                max-file: "2"
+
+    # ============================================
+    # 📧 Mailpit (จับอีเมลดูตอน dev)
+    # ============================================
     mailpit:
-        restart: always
         image: 'axllent/mailpit:latest'
         ports:
             - '${FORWARD_MAILPIT_PORT:-1025}:1025'
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
-        deploy:
-            resources:
-                limits:
-                    memory: 128M
-                    cpus: '0.25'
-        logging:
-            driver: json-file
-            options:
-                max-size: "5m"
-                max-file: "2"
+
 networks:
     sail:
         driver: bridge
+
 volumes:
     sail-mysql:
         driver: local

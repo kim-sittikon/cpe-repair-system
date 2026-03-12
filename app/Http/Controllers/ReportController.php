@@ -80,7 +80,7 @@ class ReportController extends Controller
                 },
             ],
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ], [
             'images.max' => 'อัปโหลดได้สูงสุด 5 รูป',
         ]);

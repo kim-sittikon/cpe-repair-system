@@ -108,9 +108,9 @@ class JobController extends Controller
                     'repair_id' => $repairId,
                 ]);
 
-                // Update repair status to "กำลังดำเนินการ"
+                // Update repair status to "accepted" (รับเรื่อง)
                 RequestRepair::where('repair_id', $repairId)
-                    ->update(['status' => 'กำลังดำเนินการ']);
+                    ->update(['status' => 'accepted']);
             }
 
             // Create job steps

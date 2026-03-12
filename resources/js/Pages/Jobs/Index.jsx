@@ -1,16 +1,66 @@
+import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import { Search, Filter, X } from 'lucide-react';
 
 export default function Index({ auth, jobs }) {
-    const getStatusBadge = (job) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    const getJobStatus = (job) => {
         const steps = job.job_steps || [];
         const total = steps.length;
-        const completed = steps.filter(s => s.status === 'completed').length;
+        const completed = steps.filter(s => s.status === 'completed' || s.status === 'done').length;
 
-        if (total === 0) return { text: 'ไม่มีขั้นตอน', color: 'bg-gray-100 text-gray-600' };
-        if (completed === total) return { text: 'เสร็จสิ้น', color: 'bg-green-100 text-green-700' };
-        if (completed > 0) return { text: `${completed}/${total} ขั้นตอน`, color: 'bg-blue-100 text-blue-700' };
-        return { text: 'รอดำเนินการ', color: 'bg-orange-100 text-orange-700' };
+        if (total === 0) return 'no_steps';
+        if (completed === total) return 'completed';
+        if (completed > 0) return 'in_progress';
+        return 'pending';
+    };
+
+    const getStatusBadge = (job) => {
+        const status = getJobStatus(job);
+        const steps = job.job_steps || [];
+        const total = steps.length;
+        const completed = steps.filter(s => s.status === 'completed' || s.status === 'done').length;
+
+        switch (status) {
+            case 'no_steps': return { text: 'ไม่มีขั้นตอน', color: 'bg-gray-100 text-gray-600' };
+            case 'completed': return { text: 'เสร็จสิ้น', color: 'bg-green-100 text-green-700' };
+            case 'in_progress': return { text: `${completed}/${total} ขั้นตอน`, color: 'bg-blue-100 text-blue-700' };
+            default: return { text: 'รอดำเนินการ', color: 'bg-orange-100 text-orange-700' };
+        }
+    };
+
+    // Filter jobs
+    const filteredJobs = jobs.data.filter(job => {
+        // Search filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            const jobId = 'JOB-' + String(job.job_id).padStart(4, '0');
+            const repairCodes = (job.repairs || []).map(r => 'RP' + String(r.repair_id).padStart(4, '0')).join(' ');
+            const matchesSearch = job.name.toLowerCase().includes(query) ||
+                jobId.toLowerCase().includes(query) ||
+                repairCodes.toLowerCase().includes(query);
+            if (!matchesSearch) return false;
+        }
+
+        // Status filter
+        if (statusFilter !== 'all') {
+            const jobStatus = getJobStatus(job);
+            if (statusFilter === 'completed' && jobStatus !== 'completed') return false;
+            if (statusFilter === 'pending' && jobStatus !== 'pending') return false;
+            if (statusFilter === 'in_progress' && jobStatus !== 'in_progress') return false;
+        }
+
+        return true;
+    });
+
+    const statusCounts = {
+        all: jobs.data.length,
+        completed: jobs.data.filter(j => getJobStatus(j) === 'completed').length,
+        in_progress: jobs.data.filter(j => getJobStatus(j) === 'in_progress').length,
+        pending: jobs.data.filter(j => getJobStatus(j) === 'pending').length,
     };
 
     return (
@@ -34,6 +84,50 @@ export default function Index({ auth, jobs }) {
                         </div>
                     </div>
 
+                    {/* Search & Filter */}
+                    <div className="mb-6 space-y-4">
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="ค้นหาใบงาน ชื่องาน หรือรหัส RP..."
+                                className="w-full pl-12 pr-10 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 shadow-sm transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Status Filter Tabs */}
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: 'all', label: 'ทั้งหมด', color: 'bg-gray-100 text-gray-700', activeColor: 'bg-gray-800 text-white' },
+                                { key: 'pending', label: 'รอดำเนินการ', color: 'bg-orange-50 text-orange-600', activeColor: 'bg-orange-500 text-white' },
+                                { key: 'in_progress', label: 'กำลังดำเนินการ', color: 'bg-blue-50 text-blue-600', activeColor: 'bg-blue-500 text-white' },
+                                { key: 'completed', label: 'เสร็จสิ้น', color: 'bg-green-50 text-green-600', activeColor: 'bg-green-500 text-white' },
+                            ].map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setStatusFilter(tab.key)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${statusFilter === tab.key
+                                        ? tab.activeColor + ' shadow-md'
+                                        : tab.color + ' hover:opacity-80'
+                                        }`}
+                                >
+                                    {tab.label} ({statusCounts[tab.key]})
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Jobs List */}
                     <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                         {jobs.data.length === 0 ? (
@@ -52,11 +146,23 @@ export default function Index({ auth, jobs }) {
                                     สร้างใบงานใหม่
                                 </Link>
                             </div>
+                        ) : filteredJobs.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <Search className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                                <p className="text-gray-500 font-medium">ไม่พบใบงานที่ตรงกับเงื่อนไข</p>
+                                <p className="text-gray-400 text-sm mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+                                <button
+                                    onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+                                    className="mt-4 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                                >
+                                    ล้างตัวกรอง
+                                </button>
+                            </div>
                         ) : (
                             <>
                                 {/* Mobile: Card Layout */}
                                 <div className="sm:hidden divide-y divide-gray-100">
-                                    {jobs.data.map((job) => {
+                                    {filteredJobs.map((job) => {
                                         const status = getStatusBadge(job);
                                         return (
                                             <div key={job.job_id} className="p-4">
@@ -141,7 +247,7 @@ export default function Index({ auth, jobs }) {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
-                                            {jobs.data.map((job) => {
+                                            {filteredJobs.map((job) => {
                                                 const status = getStatusBadge(job);
                                                 return (
                                                     <tr key={job.job_id} className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50 transition-all">

@@ -28,14 +28,30 @@ export default function Create({ auth, buildings = [] }) {
     const availableRooms = selectedBuilding ? selectedBuilding.rooms : [];
 
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         const totalImages = data.images.length + files.length;
 
         if (totalImages > 5) {
             setImageError('สามารถอัปโหลดได้สูงสุด 5 รูป');
-            // Auto clear error after 3 seconds
             setTimeout(() => setImageError(''), 3000);
+            return;
+        }
+
+        // Check file size
+        const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE);
+        if (oversizedFiles.length > 0) {
+            const names = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`).join(', ');
+            setImageError(`ไฟล์เกินขนาด 5MB: ${names}`);
+            setTimeout(() => setImageError(''), 5000);
+            // Only keep files that are within limit
+            const validFiles = files.filter(f => f.size <= MAX_FILE_SIZE);
+            if (validFiles.length === 0) return;
+            setData('images', [...data.images, ...validFiles]);
+            const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+            setImagePreview([...imagePreview, ...newPreviews]);
             return;
         }
 
@@ -53,6 +69,14 @@ export default function Create({ auth, buildings = [] }) {
         if (totalImages > 5) {
             setImageError('สามารถอัปโหลดได้สูงสุด 5 รูป');
             setTimeout(() => setImageError(''), 3000);
+            setShowCamera(false);
+            return;
+        }
+
+        // Check file size
+        if (file.size > MAX_FILE_SIZE) {
+            setImageError(`ไฟล์จากกล้องเกินขนาด 5MB (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+            setTimeout(() => setImageError(''), 5000);
             setShowCamera(false);
             return;
         }
@@ -256,7 +280,7 @@ export default function Create({ auth, buildings = [] }) {
                                         className="hidden"
                                     />
                                 </label>
-                                <span className="text-xs text-gray-400">JPG, PNG ไม่เกิน 5 รูป (10MB)</span>
+                                <span className="text-xs text-gray-400">JPG, PNG ไม่เกิน 5 รูป (5MB)</span>
                             </div>
 
                             {/* Image Error Message */}

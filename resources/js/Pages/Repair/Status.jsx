@@ -55,6 +55,10 @@ export default function Status({ auth, repairs, statusOptions }) {
         });
     };
 
+    // Image upload validation constants
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
+
     // Handle image upload
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
@@ -63,6 +67,19 @@ export default function Status({ auth, repairs, statusOptions }) {
         if (totalFiles > 5) {
             setImageError('อัปโหลดได้สูงสุด 5 รูป');
             return;
+        }
+
+        for (const file of files) {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                setImageError('รองรับเฉพาะไฟล์ JPG และ PNG เท่านั้น');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                setImageError('ขนาดไฟล์ต้องไม่เกิน 5MB ต่อรูป');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
         }
 
         setImageError('');
@@ -238,7 +255,7 @@ export default function Status({ auth, repairs, statusOptions }) {
                                             >
                                                 {statusOptions.map((option) => (
                                                     <option key={option.value} value={option.value}>
-                                                        {option.value === 'processing' ? '🔄' : '✅'} {option.label}
+                                                        {option.value === 'accepted' ? '✅' : option.value === 'rejected' ? '❌' : '🏁'} {option.label}
                                                     </option>
                                                 ))}
                                             </select>
@@ -247,21 +264,29 @@ export default function Status({ auth, repairs, statusOptions }) {
                                         {/* Status Flow */}
                                         <div className="bg-gray-50 rounded-xl p-4 mb-6">
                                             <div className="flex items-center justify-center gap-3 text-sm">
-                                                {selectedStatus === 'processing' ? (
+                                                {selectedStatus === 'accepted' ? (
                                                     <>
                                                         <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg font-medium">รอดำเนินการ</span>
                                                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                                         </svg>
-                                                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg font-medium">กำลังดำเนินการ</span>
+                                                        <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">รับเรื่อง</span>
                                                     </>
-                                                ) : (
+                                                ) : selectedStatus === 'rejected' ? (
                                                     <>
-                                                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg font-medium">กำลังดำเนินการ</span>
+                                                        <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg font-medium">รอดำเนินการ</span>
                                                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                                         </svg>
-                                                        <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">เสร็จสิ้น</span>
+                                                        <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg font-medium">ปฏิเสธการดำเนินการ</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">รับเรื่อง</span>
+                                                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                        </svg>
+                                                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg font-medium">เสร็จสิ้น</span>
                                                     </>
                                                 )}
                                             </div>
@@ -326,13 +351,15 @@ export default function Status({ auth, repairs, statusOptions }) {
                                                             <input
                                                                 ref={fileInputRef}
                                                                 type="file"
-                                                                accept="image/*"
+                                                                accept="image/jpeg,image/png"
                                                                 multiple
                                                                 onChange={handleImageUpload}
                                                                 className="hidden"
                                                             />
                                                         </label>
                                                     )}
+
+                                                    <p className="text-xs text-gray-400 mt-1">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB สูงสุด 5 ไฟล์</p>
 
                                                     {imageError && (
                                                         <p className="text-xs text-red-500 mt-2">{imageError}</p>

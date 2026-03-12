@@ -236,7 +236,7 @@ export default function InviteUser({ recentInvites = [] }) {
                                             <div className="text-sm">
                                                 <span className="font-medium text-gray-900">
                                                     กลุ่มงานแจ้งซ่อม
-                                                    {data.role === 'staff' && <span className="ml-2 text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">Required</span>}
+                                                    {data.role === 'staff' && <span className="ml-2 text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">จำเป็น</span>}
                                                 </span>
                                                 <p className="text-gray-500 text-xs">สำหรับเจ้าหน้าที่ช่างและผู้ดูแลงานซ่อม</p>
                                             </div>
@@ -355,8 +355,8 @@ export default function InviteUser({ recentInvites = [] }) {
                             </h4>
                             <ul className="text-sm text-blue-800 space-y-2 list-disc list-inside">
                                 <li>ลิงก์คำเชิญมีอายุใช้งาน <strong>24 ชั่วโมง</strong></li>
-                                <li><strong>Staff</strong> จะได้รับสิทธิ์งานซ่อมโดยอัตโนมัติ</li>
-                                <li><strong>Teacher</strong> สามารถเลือกรับงานแอดมินหรือแจ้งซ่อมได้ตามความเหมาะสม</li>
+                                <li><strong>เจ้าหน้าที่</strong> จะได้รับสิทธิ์งานซ่อมโดยอัตโนมัติ</li>
+                                <li><strong>อาจารย์</strong> สามารถเลือกรับงานแอดมินหรือแจ้งซ่อมได้ตามความเหมาะสม</li>
                             </ul>
                         </div>
                     </div>

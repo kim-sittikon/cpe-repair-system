@@ -64,16 +64,8 @@ export default function Show({ auth, job }) {
         setData('files', newFiles);
     };
 
-    const handleSave = (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('details', data.details);
-        formData.append('status', 'in_progress');
-        uploadedFiles.forEach((file, index) => {
-            formData.append(`files[${index}]`, file);
-        });
-        router.post(route('repairs.jobs.step.update', selectedStep.jobstep_id), formData);
-    };
+
+
 
     const handleComplete = (e) => {
         e.preventDefault();
@@ -423,14 +415,13 @@ export default function Show({ auth, job }) {
                                                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
                                                     <button
                                                         type="button"
-                                                        onClick={handleSave}
-                                                        disabled={processing}
-                                                        className="px-6 py-3 bg-white text-gray-600 border border-gray-300 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:text-gray-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                                        onClick={() => window.history.back()}
+                                                        className="px-6 py-3 bg-white text-gray-600 border border-gray-300 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:text-gray-700 transition-all flex items-center justify-center gap-2"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                                         </svg>
-                                                        บันทึกแบบร่าง
+                                                        ย้อนกลับ
                                                     </button>
                                                     <button
                                                         type="button"

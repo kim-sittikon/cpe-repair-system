@@ -83,189 +83,388 @@ function PrivacyPolicyModal({ isOpen, onClose, onAccept }) {
                 <div
                     ref={contentRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto p-6 space-y-6 text-sm text-gray-600"
+                    className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 text-gray-700"
                 >
-                    {/* Section 1 */}
+                    {/* Section 1 - บทนำ */}
                     <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">1</span>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">1</span>
                             บทนำ
                         </h3>
-                        <p className="leading-relaxed">
-                            ระบบ CPE Repair System ตระหนักถึงความสำคัญของการคุ้มครองข้อมูลส่วนบุคคลของท่าน
-                            นโยบายนี้จัดทำขึ้นตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <p className="text-[15px] leading-relaxed text-gray-700">
+                                ระบบ <strong className="text-gray-900">CPE Repair System</strong> ("ระบบ") ตระหนักถึงความสำคัญของการคุ้มครองข้อมูลส่วนบุคคลของท่าน ("ผู้ใช้งาน")
+                                นโยบายฉบับนี้อธิบายถึงวิธีการที่เราเก็บรวบรวม ใช้ เปิดเผย และรักษาความปลอดภัยข้อมูลส่วนบุคคลของท่าน
+                                ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 <strong className="text-gray-900">(PDPA)</strong>
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* Section 2 - ข้อมูลที่เก็บรวบรวม */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">2</span>
+                            ข้อมูลที่เราเก็บรวบรวม
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-3">เพื่อให้ท่านสามารถใช้งานระบบแจ้งซ่อมและติดตามสถานะได้ เราเก็บรวบรวมข้อมูลดังต่อไปนี้</p>
+                        <div className="space-y-3">
+                            <div className="flex items-start gap-3 bg-white rounded-xl p-3.5 border border-gray-100 shadow-sm">
+                                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center text-lg">📋</div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-sm">ข้อมูลระบุตัวตน</h4>
+                                    <p className="text-sm text-gray-600 mt-0.5">ชื่อ, นามสกุล (เพื่อยืนยันตัวตนว่าเป็นบุคลากร/นักศึกษาจริง)</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 bg-white rounded-xl p-3.5 border border-gray-100 shadow-sm">
+                                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-lg">📧</div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-sm">ข้อมูลการติดต่อ</h4>
+                                    <p className="text-sm text-gray-600 mt-0.5">อีเมลมหาวิทยาลัย (@mail.rmutt.ac.th) เพื่อรับรหัส OTP และแจ้งเตือนสถานะ</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 bg-white rounded-xl p-3.5 border border-gray-100 shadow-sm">
+                                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center text-lg">🔐</div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-sm">ข้อมูลการเข้าใช้งาน</h4>
+                                    <p className="text-sm text-gray-600 mt-0.5">รหัสผ่าน (เข้ารหัส), บันทึกการเข้าสู่ระบบ (Log Files)</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 bg-white rounded-xl p-3.5 border border-gray-100 shadow-sm">
+                                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center text-lg">🔧</div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-sm">ข้อมูลการแจ้งซ่อม</h4>
+                                    <p className="text-sm text-gray-600 mt-0.5">รายละเอียดอุปกรณ์, รูปภาพความเสียหาย, ประวัติการส่งซ่อม</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Section 3 - ฐานกฎหมาย */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">3</span>
+                            ฐานกฎหมายในการประมวลผล
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-3">ตาม PDPA มาตรา 24 เราประมวลผลข้อมูลของท่านภายใต้ฐานกฎหมายดังนี้</p>
+                        <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-800 text-white">
+                                        <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-wide">ฐานกฎหมาย</th>
+                                        <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-wide">กิจกรรมที่เกี่ยวข้อง</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-3 font-semibold text-gray-900">ความยินยอม (Consent)</td>
+                                        <td className="px-4 py-3 text-gray-600">การสมัครสมาชิกและลงทะเบียนใช้งานระบบ</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors bg-gray-50/50">
+                                        <td className="px-4 py-3 font-semibold text-gray-900">การปฏิบัติตามสัญญา</td>
+                                        <td className="px-4 py-3 text-gray-600">การให้บริการแจ้งซ่อม, ติดตามสถานะ และแจ้งเตือน</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-3 font-semibold text-gray-900">หน้าที่ตามกฎหมาย</td>
+                                        <td className="px-4 py-3 text-gray-600">การเก็บ Log Files ตาม พ.ร.บ. คอมพิวเตอร์ (≥ 90 วัน)</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors bg-gray-50/50">
+                                        <td className="px-4 py-3 font-semibold text-gray-900">ประโยชน์อันชอบธรรม</td>
+                                        <td className="px-4 py-3 text-gray-600">การรักษาความปลอดภัยระบบและป้องกันการโจมตี</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    {/* Section 4 - วัตถุประสงค์ */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">4</span>
+                            วัตถุประสงค์การใช้ข้อมูล
+                        </h3>
+                        <div className="space-y-2.5">
+                            {[
+                                { icon: '🔑', title: 'การยืนยันตัวตน', desc: 'เพื่อให้มั่นใจว่าผู้ใช้งานเป็นเจ้าของบัญชีและมีสิทธิ์ในระบบ' },
+                                { icon: '🔧', title: 'การให้บริการ', desc: 'เพื่อดำเนินการรับแจ้งซ่อม, ติดตามสถานะ และประสานงานกับช่างเทคนิค' },
+                                { icon: '📬', title: 'การติดต่อสื่อสาร', desc: 'เพื่อส่งรหัส OTP, แจ้งเตือนสถานะงานซ่อม หรือข่าวสารที่เกี่ยวข้อง' },
+                                { icon: '🛡️', title: 'ความปลอดภัย', desc: 'เพื่อตรวจสอบและป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต' },
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                                    <div>
+                                        <span className="font-bold text-gray-900 text-sm">{item.title}:</span>
+                                        <span className="text-gray-600 text-sm ml-1">{item.desc}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Section 5 - การเปิดเผย */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">5</span>
+                            การเปิดเผยและส่งต่อข้อมูล
+                        </h3>
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 text-xl">🚫</span>
+                            <p className="text-red-800 font-bold text-sm">ทางเราไม่มีนโยบายจำหน่ายข้อมูลส่วนบุคคลของท่านให้แก่บุคคลภายนอก</p>
+                        </div>
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3 flex items-start gap-3">
+                            <span className="flex-shrink-0 text-xl mt-0.5">📌</span>
+                            <p className="text-blue-800 text-sm leading-relaxed">
+                                <strong>การยินยอมโดยผู้ใช้งาน:</strong> เมื่อท่านสมัครสมาชิกและยอมรับนโยบายนี้ ถือว่าท่านยินยอมให้ระบบเก็บรวบรวม
+                                ใช้ และเปิดเผยข้อมูลที่เกี่ยวข้องกับการแจ้งซ่อมแก่เจ้าหน้าที่เทคนิคและผู้ดูแลระบบ
+                                เพื่อดำเนินการตามวัตถุประสงค์ของระบบได้
+                            </p>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">ข้อมูลของท่านอาจถูกเปิดเผยได้ในกรณีดังต่อไปนี้เท่านั้น:</p>
+                        <ul className="space-y-2 text-sm">
+                            <li className="flex items-start gap-2">
+                                <span className="text-orange-500 mt-0.5 font-bold">•</span>
+                                <span><strong className="text-gray-900">ผู้ดูแลระบบและเจ้าหน้าที่เทคนิค:</strong> <span className="text-gray-600">เพื่อดำเนินการซ่อมแซมและแก้ไขปัญหาตามที่ท่านแจ้ง</span></span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-orange-500 mt-0.5 font-bold">•</span>
+                                <span><strong className="text-gray-900">หน่วยงานภายในมหาวิทยาลัย:</strong> <span className="text-gray-600">กรณีตรวจสอบทรัพย์สินหรือยืนยันสถานภาพ</span></span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-orange-500 mt-0.5 font-bold">•</span>
+                                <span><strong className="text-gray-900">การบังคับใช้กฎหมาย:</strong> <span className="text-gray-600">หากได้รับการร้องขอตามกระบวนการทางกฎหมาย</span></span>
+                            </li>
+                        </ul>
+                    </section>
+
+                    {/* Section 6 - ระยะเวลา */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">6</span>
+                            ระยะเวลาการเก็บรักษา
+                        </h3>
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex items-start gap-3">
+                            <span className="flex-shrink-0 text-2xl mt-0.5">⏱️</span>
+                            <div>
+                                <p className="text-sm text-gray-700 leading-relaxed">
+                                    เราจะเก็บรักษาข้อมูลส่วนบุคคลของท่านไว้ตราบเท่าที่ท่านยังมีสถานภาพเป็นผู้ใช้งานระบบ
+                                    หรือตามความจำเป็นเพื่อวัตถุประสงค์ทางกฎหมาย
+                                </p>
+                                <p className="text-blue-700 font-bold text-sm mt-2">
+                                    📝 ข้อมูล Log การใช้งานจะถูกเก็บรักษาไว้อย่างน้อย 90 วัน ตาม พ.ร.บ. คอมพิวเตอร์
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Section 7 - ความปลอดภัย */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">7</span>
+                            มาตรการความปลอดภัย
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { icon: '🔒', title: 'เข้ารหัสรหัสผ่าน', desc: 'Hash & Salt ในฐานข้อมูล' },
+                                { icon: '🔐', title: 'HTTPS/SSL', desc: 'การเชื่อมต่อที่ปลอดภัย' },
+                                { icon: '👤', title: 'จำกัดสิทธิ์', desc: 'เฉพาะเจ้าหน้าที่ที่เกี่ยวข้อง' },
+                                { icon: '🛡️', title: 'Firewall & Monitoring', desc: 'ป้องกันการโจมตีทางไซเบอร์' },
+                            ].map((item, i) => (
+                                <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2.5 border border-gray-100">
+                                    <span className="text-xl flex-shrink-0">{item.icon}</span>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 text-xs">{item.title}</h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Section 8 - คุกกี้ */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">8</span>
+                            คุกกี้และเทคโนโลยีติดตาม
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-3">ระบบของเราใช้คุกกี้ที่จำเป็นสำหรับการทำงานดังนี้</p>
+                        <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-800 text-white">
+                                        <th className="px-4 py-2.5 text-left font-bold text-xs uppercase tracking-wide">ประเภท</th>
+                                        <th className="px-4 py-2.5 text-left font-bold text-xs uppercase tracking-wide">วัตถุประสงค์</th>
+                                        <th className="px-4 py-2.5 text-left font-bold text-xs uppercase tracking-wide">ระยะเวลา</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-2.5 font-semibold text-gray-900">Session Cookie</td>
+                                        <td className="px-4 py-2.5 text-gray-600">รักษาสถานะการเข้าสู่ระบบ</td>
+                                        <td className="px-4 py-2.5 text-gray-600">ปิดเบราว์เซอร์</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors bg-gray-50/50">
+                                        <td className="px-4 py-2.5 font-semibold text-gray-900">CSRF Token</td>
+                                        <td className="px-4 py-2.5 text-gray-600">ป้องกันการโจมตี CSRF</td>
+                                        <td className="px-4 py-2.5 text-gray-600">ต่อ Session</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-2.5 font-semibold text-gray-900">Remember Token</td>
+                                        <td className="px-4 py-2.5 text-gray-600">จดจำการเข้าสู่ระบบ</td>
+                                        <td className="px-4 py-2.5 text-gray-600">30 วัน</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p className="text-gray-400 text-xs mt-2 italic">* เราไม่ใช้คุกกี้เพื่อการโฆษณาหรือติดตามพฤติกรรมข้ามเว็บไซต์</p>
+                    </section>
+
+                    {/* Section 9 - สิทธิ */}
+                    <section>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">9</span>
+                            สิทธิของเจ้าของข้อมูล (8 ประการ)
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-3">ตาม PDPA ท่านมีสิทธิดังต่อไปนี้</p>
+                        <div className="grid grid-cols-2 gap-2.5">
+                            {[
+                                { num: 1, title: 'สิทธิในการเข้าถึง', desc: 'ขอเข้าถึงข้อมูลส่วนบุคคลของท่าน' },
+                                { num: 2, title: 'สิทธิในการแก้ไข', desc: 'ขอแก้ไขข้อมูลให้ถูกต้องเป็นปัจจุบัน' },
+                                { num: 3, title: 'สิทธิในการลบ', desc: 'ขอให้ลบข้อมูลที่ไม่จำเป็น' },
+                                { num: 4, title: 'สิทธิในการระงับ', desc: 'ขอระงับการประมวลผลชั่วคราว' },
+                                { num: 5, title: 'สิทธิในการคัดค้าน', desc: 'คัดค้านการประมวลผลข้อมูล' },
+                                { num: 6, title: 'สิทธิในการโอนย้าย', desc: 'ขอรับข้อมูลในรูปแบบที่อ่านได้' },
+                                { num: 7, title: 'สิทธิถอนความยินยอม', desc: 'ถอนความยินยอมได้ทุกเมื่อ' },
+                                { num: 8, title: 'สิทธิในการร้องเรียน', desc: 'ร้องเรียนต่อหน่วยงานกำกับดูแล' },
+                            ].map((right) => (
+                                <div key={right.num} className="bg-gradient-to-r from-orange-50 to-rose-50 rounded-xl p-3 border border-orange-100/60">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white text-xs flex items-center justify-center font-bold shadow-sm">{right.num}</span>
+                                        <h4 className="font-bold text-gray-900 text-xs">{right.title}</h4>
+                                    </div>
+                                    <p className="text-xs text-gray-600 ml-8">{right.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-gray-500 mt-3 text-xs">
+                            หากท่านต้องการใช้สิทธิใดๆ กรุณาติดต่อผู้ดูแลระบบ เราจะดำเนินการภายใน <strong>30 วัน</strong>นับจากวันที่ได้รับคำขอ
                         </p>
                     </section>
 
-                    {/* Section 2 */}
+                    {/* Section 10 - โอนข้อมูล */}
                     <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">2</span>
-                            ข้อมูลที่เราเก็บรวบรวม
-                        </h3>
-                        <ul className="space-y-2">
-                            <li className="flex items-start gap-2">
-                                <span className="text-orange-500 mt-0.5">•</span>
-                                <span><strong>ข้อมูลระบุตัวตน:</strong> ชื่อ, นามสกุล</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-orange-500 mt-0.5">•</span>
-                                <span><strong>ข้อมูลการติดต่อ:</strong> อีเมลมหาวิทยาลัย (@mail.rmutt.ac.th)</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-orange-500 mt-0.5">•</span>
-                                <span><strong>ข้อมูลการเข้าใช้งาน:</strong> รหัสผ่าน (เข้ารหัส), Log Files, IP Address</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-orange-500 mt-0.5">•</span>
-                                <span><strong>ข้อมูลการแจ้งซ่อม:</strong> รายละเอียดอุปกรณ์, รูปภาพ, ประวัติการซ่อม</span>
-                            </li>
-                        </ul>
-                    </section>
-
-                    {/* Section 3 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">3</span>
-                            ฐานกฎหมายในการประมวลผล (PDPA มาตรา 24)
-                        </h3>
-                        <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                            <div className="flex justify-between">
-                                <span className="font-medium">ความยินยอม</span>
-                                <span className="text-gray-500">การสมัครสมาชิก</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="font-medium">การปฏิบัติตามสัญญา</span>
-                                <span className="text-gray-500">การให้บริการแจ้งซ่อม</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="font-medium">หน้าที่ตามกฎหมาย</span>
-                                <span className="text-gray-500">การเก็บ Log (พ.ร.บ. คอมพิวเตอร์)</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Section 4 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">4</span>
-                            วัตถุประสงค์การใช้ข้อมูล
-                        </h3>
-                        <ul className="space-y-1">
-                            <li>✓ การยืนยันตัวตนผู้ใช้งาน</li>
-                            <li>✓ การให้บริการแจ้งซ่อมและติดตามสถานะ</li>
-                            <li>✓ การส่ง OTP และแจ้งเตือนสถานะ</li>
-                            <li>✓ การรักษาความปลอดภัยระบบ</li>
-                        </ul>
-                    </section>
-
-                    {/* Section 5 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">5</span>
-                            การเปิดเผยข้อมูล
-                        </h3>
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-                            <p className="text-red-700 font-medium text-xs">⚠️ เราไม่จำหน่ายข้อมูลส่วนบุคคลให้บุคคลภายนอก</p>
-                        </div>
-                        <p>ข้อมูลอาจเปิดเผยแก่: ผู้ดูแลระบบ, หน่วยงานภายในมหาวิทยาลัย, หรือตามกระบวนการทางกฎหมาย</p>
-                    </section>
-
-                    {/* Section 6 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">6</span>
-                            ระยะเวลาการเก็บรักษา
-                        </h3>
-                        <p>เก็บรักษาตราบเท่าที่ท่านเป็นผู้ใช้งาน • Log การใช้งานเก็บอย่างน้อย 90 วันตาม พ.ร.บ. คอมพิวเตอร์</p>
-                    </section>
-
-                    {/* Section 7 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">7</span>
-                            มาตรการความปลอดภัย
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 rounded-lg p-2 text-xs">🔒 เข้ารหัสรหัสผ่าน (Hash & Salt)</div>
-                            <div className="bg-gray-50 rounded-lg p-2 text-xs">🔐 HTTPS/SSL ตลอดการใช้งาน</div>
-                            <div className="bg-gray-50 rounded-lg p-2 text-xs">👤 จำกัดสิทธิ์การเข้าถึง</div>
-                            <div className="bg-gray-50 rounded-lg p-2 text-xs">🛡️ Firewall & Monitoring</div>
-                        </div>
-                    </section>
-
-                    {/* Section 8 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">8</span>
-                            คุกกี้และเทคโนโลยีติดตาม
-                        </h3>
-                        <p>เราใช้คุกกี้ที่จำเป็นเท่านั้น: Session Cookie, CSRF Token, Remember Token (ถ้าเลือก)</p>
-                    </section>
-
-                    {/* Section 9 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">9</span>
-                            สิทธิของเจ้าของข้อมูล (8 ประการ)
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">1</span> สิทธิในการเข้าถึง</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">2</span> สิทธิในการแก้ไข</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">3</span> สิทธิในการลบ</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">4</span> สิทธิในการระงับ</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">5</span> สิทธิในการคัดค้าน</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">6</span> สิทธิในการโอนย้าย</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">7</span> สิทธิในการถอนความยินยอม</div>
-                            <div className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px]">8</span> สิทธิในการร้องเรียน</div>
-                        </div>
-                    </section>
-
-                    {/* Section 10-13 */}
-                    <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">10</span>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">10</span>
                             การโอนข้อมูลข้ามแดน
                         </h3>
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                            <p className="text-green-700 font-medium text-xs">🇹🇭 ข้อมูลของท่านจะถูกเก็บรักษาภายในประเทศไทยเท่านั้น</p>
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                            <span className="text-3xl flex-shrink-0">🇹🇭</span>
+                            <div>
+                                <p className="text-green-800 font-bold text-sm">ข้อมูลของท่านจะถูกเก็บรักษาภายในประเทศไทยเท่านั้น</p>
+                                <p className="text-green-700 text-xs mt-0.5">เราไม่มีนโยบายโอนข้อมูลส่วนบุคคลไปยังต่างประเทศ</p>
+                            </div>
                         </div>
                     </section>
 
+                    {/* Section 11 - การเปลี่ยนแปลง */}
                     <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">11</span>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">11</span>
                             การเปลี่ยนแปลงนโยบาย
                         </h3>
-                        <p>เราจะแจ้งให้ทราบผ่านอีเมลหรือประกาศในระบบเมื่อมีการเปลี่ยนแปลงที่สำคัญ</p>
+                        <p className="text-sm text-gray-600 leading-relaxed mb-2">เราอาจปรับปรุงนโยบายนี้เป็นครั้งคราว โดยจะแจ้งให้ท่านทราบผ่าน:</p>
+                        <ul className="space-y-1.5 text-sm text-gray-600">
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></span>
+                                การแจ้งเตือนทางอีเมล (กรณีเปลี่ยนแปลงสำคัญ)
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></span>
+                                การประกาศบนหน้าเข้าสู่ระบบ
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></span>
+                                การอัปเดตวันที่ "ปรับปรุงล่าสุด" บนหน้านี้
+                            </li>
+                        </ul>
                     </section>
 
+                    {/* Section 12 - ข้อจำกัด */}
                     <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">12</span>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">12</span>
                             ข้อจำกัดความรับผิดชอบ
                         </h3>
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                            <p className="text-yellow-700 text-xs">⚠️ แม้เราใช้มาตรการความปลอดภัยขั้นสูง แต่ไม่สามารถรับประกันได้ว่าระบบจะปราศจากข้อผิดพลาด 100%</p>
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-3 flex items-start gap-3">
+                            <span className="flex-shrink-0 text-xl mt-0.5">⚠️</span>
+                            <p className="text-amber-800 text-sm leading-relaxed">
+                                ระบบนี้จัดทำขึ้นเพื่ออำนวยความสะดวกในการแจ้งซ่อมภายในหน่วยงาน แม้เราจะใช้มาตรการความปลอดภัยขั้นสูง
+                                แต่เราไม่สามารถรับประกันได้ว่าระบบจะปราศจากข้อผิดพลาด หรือการโจมตีจากไวรัส/มัลแวร์ 100%
+                            </p>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 mb-2">ผู้พัฒนาและผู้ดูแลระบบจะไม่รับผิดชอบในกรณีดังต่อไปนี้:</p>
+                        <ul className="space-y-2 text-sm">
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5 font-bold">✕</span>
+                                <span className="text-gray-700">ความเสียหายที่เกิดจากผู้ใช้งาน<strong className="text-gray-900">เปิดเผยข้อมูลส่วนบุคคลด้วยตนเอง</strong> เช่น แชร์รหัสผ่าน หรือเปิดเผยข้อมูลบัญชีให้ผู้อื่น</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5 font-bold">✕</span>
+                                <span className="text-gray-700">เหตุสุดวิสัยที่อยู่นอกเหนือการควบคุม เช่น <strong className="text-gray-900">การโจมตีทางไซเบอร์, ภัยธรรมชาติ</strong> หรือระบบของบุคคลที่สามล่ม</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5 font-bold">✕</span>
+                                <span className="text-gray-700">ข้อมูลที่ผู้ใช้งาน<strong className="text-gray-900">กรอกไม่ถูกต้อง</strong>หรือไม่เป็นปัจจุบัน ซึ่งส่งผลต่อการให้บริการ</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5 font-bold">✕</span>
+                                <span className="text-gray-700">ผลกระทบจากการที่ผู้ใช้งาน<strong className="text-gray-900">ไม่ปฏิบัติตามข้อกำหนด</strong>การใช้งานระบบ หรือใช้ระบบในทางที่ผิดวัตถุประสงค์</span>
+                            </li>
+                        </ul>
+                        <div className="bg-gray-100 border border-gray-200 rounded-xl p-4 mt-3 flex items-start gap-3">
+                            <span className="flex-shrink-0 text-xl mt-0.5">📜</span>
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                                การกดยอมรับนโยบายนี้ถือว่าท่านได้อ่าน เข้าใจ และยินยอมปฏิบัติตามเงื่อนไขทั้งหมดข้างต้นแล้ว
+                                หากท่านไม่เห็นด้วยกับนโยบายนี้ กรุณาอย่าดำเนินการลงทะเบียนใช้งานระบบ
+                            </p>
                         </div>
                     </section>
 
+                    {/* Section 13 - ติดต่อ */}
                     <section>
-                        <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">13</span>
+                        <h3 className="text-lg font-extrabold text-gray-900 mb-3 flex items-center gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">13</span>
                             ติดต่อเรา
                         </h3>
-                        <div className="bg-gray-800 rounded-xl p-4 text-white text-xs">
-                            <p className="font-semibold mb-1">ภาควิชาวิศวกรรมคอมพิวเตอร์</p>
-                            <p className="text-gray-400">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลธัญบุรี</p>
-                            <p className="text-orange-400 mt-1">📧 cpe@rmutt.ac.th</p>
+                        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-5 text-white">
+                            <h4 className="font-bold text-sm mb-3">ผู้ควบคุมข้อมูลส่วนบุคคล (Data Controller)</h4>
+                            <div className="space-y-2.5 text-sm">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-orange-400 flex-shrink-0">🏢</span>
+                                    <div>
+                                        <p className="font-semibold">ภาควิชาวิศวกรรมคอมพิวเตอร์</p>
+                                        <p className="text-gray-400 text-xs">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลธัญบุรี</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="text-orange-400 flex-shrink-0">📍</span>
+                                    <p className="text-gray-300 text-xs">39 หมู่ 1 ถ.รังสิต-นครนายก ต.คลองหก อ.คลองหลวง จ.ปทุมธานี 12110</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-orange-400 flex-shrink-0">📧</span>
+                                    <span className="text-orange-400 font-semibold">cpe@rmutt.ac.th</span>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
                     {/* End of content marker */}
-                    <div className="text-center pt-4 pb-2">
-                        <p className="text-gray-400 text-xs">— จบเนื้อหานโยบายความเป็นส่วนตัว —</p>
-                        <p className="text-gray-500 text-xs mt-1">ปรับปรุงล่าสุด: 29 มกราคม 2569</p>
+                    <div className="text-center pt-6 pb-2 border-t border-gray-100">
+                        <p className="text-gray-400 text-xs font-medium">— จบเนื้อหานโยบายความเป็นส่วนตัว —</p>
+                        <p className="text-gray-500 text-xs mt-1.5 flex items-center justify-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            ปรับปรุงล่าสุด: 12 มีนาคม 2569
+                        </p>
                     </div>
                 </div>
 
