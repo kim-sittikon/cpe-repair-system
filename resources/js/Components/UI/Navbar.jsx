@@ -27,9 +27,8 @@ export default function Navbar() {
     if (!user) return null;
 
     // Safe Name Handling
-    const fullNameParts = (user.name || '').split(' ');
-    const firstName = fullNameParts[0] || 'User';
-    const lastName = fullNameParts.slice(1).join(' ') || '';
+    const firstName = user.first_name || 'User';
+    const lastName = user.last_name || '';
     const userRole = user.role || 'User';
 
     // Toggle section expansion

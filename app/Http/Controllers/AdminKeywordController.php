@@ -36,12 +36,29 @@ class AdminKeywordController extends Controller
         ]);
 
         // Check for duplicate (including soft deleted)
-        $exists = Keyword::withTrashed()
+        $existingKeyword = Keyword::withTrashed()
             ->where('type', $validated['type'])
             ->where('keyword', $validated['keyword'])
-            ->exists();
+            ->first();
 
-        if ($exists) {
+        if ($existingKeyword) {
+            // If soft-deleted, restore it with updated data
+            if ($existingKeyword->trashed()) {
+                $existingKeyword->restore();
+                $existingKeyword->update([
+                    'scope' => $validated['scope'],
+                    'creator_id' => auth()->user()->account_id,
+                    'editor_id' => null,
+                    'deleter_id' => null,
+                ]);
+
+                // Cache Invalidation
+                \Illuminate\Support\Facades\Cache::forget("keywords_global_{$validated['type']}");
+                \Illuminate\Support\Facades\Cache::forget("keywords_personal_{$validated['type']}");
+
+                return back()->with('success', 'เพิ่มคีย์เวิร์ดสำเร็จ');
+            }
+
             return back()->withErrors(['keyword' => 'คีย์เวิร์ดนี้มีอยู่แล้วในประเภทที่เลือก']);
         }
 

@@ -6,9 +6,8 @@ export default function Sidebar({ user, navItems = [] }) {
     if (!user) return null;
 
     // Logic to simulate first/last name if your User model only has 'name'
-    const fullNameParts = (user.name || '').split(' ');
-    const firstName = fullNameParts[0] || 'User';
-    const lastName = fullNameParts.slice(1).join(' ') || '';
+    const firstName = user.first_name || 'User';
+    const lastName = user.last_name || '';
 
     // If navItems is empty, provide default dashboard link
     const items = navItems.length > 0 ? navItems : [

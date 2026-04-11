@@ -78,24 +78,40 @@ class PersonalKeywordController extends Controller
 
         $user = auth()->user();
 
-        // Check for duplicate (Any scope: Global or Personal)
-        // Since the DB has unique(type, keyword), we cannot add if it exists anywhere in this type.
-        $exists = Keyword::where('type', $validated['type'])
+        // Check for duplicate (Any scope: Global or Personal, including soft-deleted)
+        // Since the DB has unique(type, keyword), we must check withTrashed()
+        $existingKeyword = Keyword::withTrashed()
+            ->where('type', $validated['type'])
             ->where('keyword', $validated['keyword'])
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            // Check if it is global to give specific message
-            $isGlobal = Keyword::where('type', $validated['type'])
-                ->where('keyword', $validated['keyword'])
-                ->where('scope', 'global')
-                ->exists();
+        if ($existingKeyword) {
+            // If it's a soft-deleted personal keyword owned by this user, restore it
+            if ($existingKeyword->trashed() && $existingKeyword->scope === 'personal' && $existingKeyword->creator_id === $user->account_id) {
+                $existingKeyword->restore();
+                $existingKeyword->update([
+                    'deleter_id' => null,
+                    'editor_id' => null,
+                ]);
 
-            if ($isGlobal) {
-                return back()->withErrors(['keyword' => 'คำนี้มีอยู่ใน "คีย์เวิร์ดกลาง" แล้ว ไม่จำเป็นต้องเพิ่ม']);
+                // Cache Invalidation
+                \Illuminate\Support\Facades\Cache::forget("keywords_personal_{$validated['type']}");
+
+                return back()->with('success', 'เพิ่มคีย์เวิร์ดส่วนตัวเรียบร้อย');
             }
 
-            return back()->withErrors(['keyword' => 'คุณมีคีย์เวิร์ดนี้อยู่แล้ว']);
+            // If it's a soft-deleted record but not owned by this user, or still active
+            if (!$existingKeyword->trashed()) {
+                // Check if it is global to give specific message
+                if ($existingKeyword->scope === 'global') {
+                    return back()->withErrors(['keyword' => 'คำนี้มีอยู่ใน "คีย์เวิร์ดกลาง" แล้ว ไม่จำเป็นต้องเพิ่ม']);
+                }
+
+                return back()->withErrors(['keyword' => 'คุณมีคีย์เวิร์ดนี้อยู่แล้ว']);
+            }
+
+            // Soft-deleted but belongs to someone else or is global
+            return back()->withErrors(['keyword' => 'ไม่สามารถเพิ่มคีย์เวิร์ดนี้ได้ เนื่องจากมีอยู่ในระบบแล้ว']);
         }
 
         Keyword::create([
@@ -128,24 +144,24 @@ class PersonalKeywordController extends Controller
             'keyword' => 'required|string|max:255',
         ]);
 
-        // Check duplicate (Any scope, excluding self)
-        $exists = Keyword::where('type', $keyword->type)
+        // Check duplicate (Any scope, excluding self, including soft-deleted)
+        $existingKeyword = Keyword::withTrashed()
+            ->where('type', $keyword->type)
             ->where('keyword', $validated['keyword'])
             ->where('id', '!=', $id)
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            // Check if it is global
-            $isGlobal = Keyword::where('type', $keyword->type)
-                ->where('keyword', $validated['keyword'])
-                ->where('scope', 'global')
-                ->exists();
+        if ($existingKeyword) {
+            if (!$existingKeyword->trashed()) {
+                // Check if it is global
+                if ($existingKeyword->scope === 'global') {
+                    return back()->withErrors(['keyword' => 'คำนี้มีอยู่ใน "คีย์เวิร์ดกลาง" แล้ว ไม่จำเป็นต้องเพิ่ม']);
+                }
 
-            if ($isGlobal) {
-                return back()->withErrors(['keyword' => 'คำนี้มีอยู่ใน "คีย์เวิร์ดกลาง" แล้ว ไม่จำเป็นต้องเพิ่ม']);
+                return back()->withErrors(['keyword' => 'คุณมีคีย์เวิร์ดนี้อยู่แล้ว']);
             }
 
-            return back()->withErrors(['keyword' => 'คุณมีคีย์เวิร์ดนี้อยู่แล้ว']);
+            return back()->withErrors(['keyword' => 'ไม่สามารถใช้คีย์เวิร์ดนี้ได้ เนื่องจากมีอยู่ในระบบแล้ว']);
         }
 
         $keyword->update([

@@ -29,3 +29,30 @@ firebase-credentials.json
 *.credentials.json
 /storage/app/*.json
 cpe_repair_database.sql
+
+# Docker production files with real credentials
+.env.docker
+.env.test
+
+# Test files
+test_invite.csv
+cpe-local.zip
+
+# Backup files
+*.bak
+
+# Docs (internal use only)
+/docs/
+
+# PWA source icons (already built in public/)
+/PWAIcon/
+
+# PreProject documents
+/PreProject/
+
+# Server-specific configs
+/docker/cloudflared/
+/monitoring/
+
+# Scripts with server config
+/scripts/
